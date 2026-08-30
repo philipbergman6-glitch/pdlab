@@ -33,7 +33,7 @@ payoff per round of
 
 1. TFT is $\dfrac{T+R+P+S}{4}$, *independent of* $\varepsilon$;
 2. WSLS is $R - (4R - 2P - T - S)\,\varepsilon + O(\varepsilon^2)$;
-3. ALLC is $R - (R-S)\,\varepsilon + O(\varepsilon^2)$ and ALLD is $P + (T+S-2P)\,\varepsilon + O(\varepsilon^2)$;
+3. ALLC is $R - (2R-T-S)\,\varepsilon + O(\varepsilon^2)$ and ALLD is $P + (T+S-2P)\,\varepsilon + O(\varepsilon^2)$ (for a pair of unconditional players the four outcomes have probabilities $(1-\varepsilon)^2$, $\varepsilon(1-\varepsilon)$, $\varepsilon(1-\varepsilon)$, $\varepsilon^2$, which gives both expansions directly);
 4. GTFT with forgiveness $g = 1/3$ is, for $(5,3,1,0)$,
    $\dfrac{3 + 21\varepsilon + 27\varepsilon^2}{(1+4\varepsilon)^2}
    = \dfrac{3(1 + 7\varepsilon + 9\varepsilon^2)}{(1+4\varepsilon)^2} = 3 - 3\varepsilon + 3\varepsilon^2 + O(\varepsilon^3)$.
@@ -57,10 +57,12 @@ Taylor expansion at $\varepsilon = 0$. $\square$
 
 Item (1) is the sharpest possible statement of TFT's fragility: the limit
 $\varepsilon \to 0$ of the noisy payoff, $9/4$, is *not* the noiseless
-payoff $R = 3$. TFT self-play is discontinuous in the noise level. The
-generous strategies, by contrast, degrade linearly, with slopes that rank
-them: ALLC ($-1$), GTFT ($-3$), WSLS ($-5$), ZDGTFT-2 ($-8$) for
-Axelrod's payoffs. @tbl:noise lists the expansions and the exact
+payoff $R = 3$. TFT self-play is discontinuous in the noise level. Every
+other cooperative strategy degrades linearly, with a slope that measures
+how much damage one error does before the pair recovers: ALLC ($-1$,
+unconditional, so an error costs one round), GTFT ($-3$), WSLS ($-5$),
+ZDGTFT-2 ($-8$) for Axelrod's payoffs. The slope ranks self-play
+robustness only; who actually survives selection is the next question. @tbl:noise lists the expansions and the exact
 values at two noise levels; @fig:noise compares the exact curves
 with simulated matches of {{scale.noise_sim_rounds}} rounds.
 
@@ -85,8 +87,10 @@ Table: Strategies favoured by selection as implementation error rises. {#tbl:evo
 
 Without noise the strict reciprocators (TFT, Grim) hold the population.
 For small positive error rates the leader is decided by drift among the
-forgiving strategies (generous ZD, GTFT, Gradual), a consequence of their
-near-equal payoffs against one another. From $\varepsilon = 0.05$ upwards
+forgiving strategies (generous ZD, GTFT, Gradual, and at $\varepsilon = 0.02$
+even Grim, which a single long-lived lineage can carry through one run), a
+consequence of their near-equal payoffs against one another in a
+population of $N = {{scale.moran_n}}$ with $\mu = 0.01$. From $\varepsilon = 0.05$ upwards
 the picture is unambiguous: *contrite* TFT dominates at every noise level,
 with the history-averaging majority rule SOFTMAJ second. CTFT's advantage
 is exactly the mechanism of Chapter 4: it accepts one round of punishment
@@ -119,14 +123,21 @@ $s_X - P = \chi\,(s_Y - P)$: the extortioner's surplus over mutual
 defection is always $\chi$ times the opponent's. For $(5,3,1,0)$,
 $\chi = 2$ and $\phi = 1/18$ this is Extort-2 $= ({{zd.extort2[0]|.4f}}, {{zd.extort2[1]|.4g}}, {{zd.extort2[2]|.4f}}, {{zd.extort2[3]|.4g}})$,
 the vector published by Stewart and Plotkin [-@stewartplotkin2012] and
-identical to the one in the `axelrod` library. The exact payoffs against every
-memory-one strategy of the tournament field confirm the relation:
+identical to the one in the `axelrod` library. The exact noise-free payoffs against every
+memory-one strategy of the tournament field confirm the relation wherever
+the opponent earns more than $P$ (against ALLD and against itself both
+players earn exactly $P$, so the relation holds as $0 = 0$). The last
+column shows what happens when the *extortioner itself* trembles: noise on
+$p$ destroys the zero-determinant structure, and the enforced ratio drifts
+away from $\chi = 2$, most for opponents that punish (TFT) and least for
+the unconditional ones. Extortion is exact only for a player who never
+misplays.
 
 {{table:zd_named}}
 
-Table: Extort-2 against named strategies (exact stationary payoffs, $\varepsilon = 0.01$ to make every chain irreducible). {#tbl:zdnamed}
+Table: Extort-2 against named strategies: exact long-run payoffs without noise, and the enforced ratio with and without implementation error on both sides. {#tbl:zdnamed}
 
-![Extort-2 confines every opponent to the line $s_X - 1 = 2(s_Y - 1)$.](../figures/zd_scatter.pdf){#fig:zdscatter width=65%}
+![Without noise, Extort-2 confines every opponent to the line $s_X - 1 = 2(s_Y - 1)$ (grey: random memory-one opponents; red: the named strategies).](../figures/zd_scatter.pdf){#fig:zdscatter width=65%}
 
 *Generosity.* The same construction with baseline $R$ instead of $P$
 enforces $s_X - R = \chi\,(s_Y - R)$: the generous player's *shortfall*
@@ -141,8 +152,9 @@ Press and Dyson's most provocative claim is that against an
 its own payoff, the extortioner obtains the maximum of its enforced line,
 because the opponent's best response is to cooperate fully. We test this
 with a tabular Q-learner whose state is the last joint outcome
-($\alpha = 0.05$, $\gamma = 0.9$, $\varepsilon$-greedy exploration decaying
-from $0.2$ by a factor $0.9997$ per round), playing {{scale.learner_rounds}}
+(learning rate $0.05$, discount $0.9$, exploration probability decaying
+from $0.2$ by a factor $0.9997$ per round; these are the learner's own
+parameters, unrelated to the ZD coefficients and the error rate above), playing {{scale.learner_rounds}}
 rounds against Extort-2, ZDGTFT-2 and TFT for {{scale.learner_seeds}} seeds
 each. @tbl:learner reports the mean payoffs over the final fifth of
 each match.
@@ -169,8 +181,9 @@ falls into a suboptimal alternating pattern rather than into exploitation.
 
 ### Extortion in a population
 
-Extortion wins every pairwise contest but, as the tournament of Chapter 6
-already showed, loses the field. Its evolutionary fate among memory-one
+Extortion never earns less than an opponent who earns more than $P$ (the
+enforced relation gives $s_X - P = 2(s_Y - P) \ge s_Y - P$), but, as the
+tournament of Chapter 6 already showed, it loses the field. Its evolutionary fate among memory-one
 strategies is decided by self-play: Extort-2 against itself earns only
 $P + 18\varepsilon + O(\varepsilon^2)$ (@tbl:noise), essentially
 mutual defection, so it cannot hold a population it has conquered.
@@ -186,8 +199,8 @@ Table: Evolution among memory-one strategies at $\varepsilon = 0.01$. {#tbl:zdev
 
 The deterministic dynamics converge to WSLS, the error-correcting strategy
 of Nowak and Sigmund [-@nowaksigmund1993]; the stochastic process with
-mutation spends most of its time in ZDGTFT-2 and WSLS. Extort-2 goes
-extinct in both, in agreement with Hilbe, Nowak and Sigmund
+mutation spends most of its time in ZDGTFT-2 and WSLS. Extort-2 is driven to extinction by the replicator dynamics and to a
+mutation–selection residue of a few per cent in the Moran process, in agreement with Hilbe, Nowak and Sigmund
 [-@hilbenowaksigmund2013] and Adami and Hintze [-@adamihintze2013]: extortion can
 act as a catalyst for cooperation but is never its end state.
 

@@ -9,12 +9,12 @@ experiments use Axelrod's payoffs $(T,R,P,S)=(5,3,1,0)$ unless stated
 otherwise. Simulation parameters: {{tournament.rounds}} rounds per match and
 {{tournament.reps}} repetitions for tournaments; lattices of
 ${{scale.lattice}}\times{{scale.lattice}}$ sites for {{scale.lattice_steps}} generations;
-Moran populations of $N={{scale.moran_n}}$ run for {{scale.moran_steps}} birth–death events.
+Moran populations of $N={{scale.moran_n}}$ run for {{scale.moran_steps}} birth–death events in the mutation and noise experiments (the fixation experiment uses $N = {{stat:fixation_N_min}}$ to ${{stat:fixation_N_max}}$).
 
 ## The one-shot game and backward induction
 
 `pdlab.finite.backward_induction` solves the $n$-fold repeated game by the
-constructive argument of Theorem 3.1: at each stage it enumerates the pure
+constructive argument of Theorem 3.4: at each stage it enumerates the pure
 Nash equilibria of the stage game shifted by the (history-independent)
 continuation values. For every $n$ it finds exactly one, $(D,D)$, and the
 resulting path is all-$D$ with row total $nP$:
@@ -28,8 +28,8 @@ of finitely repeated games become possible.
 
 ## Discount thresholds by geometric stopping
 
-Theorems 4.2 and 4.3 predict $\delta^*_{\mathrm{Grim}}=(T-R)/(T-P)={{thresholds.thresholds.grim_spe|.4g}}$
-and $\delta^*_{\mathrm{TFT}}=(T-R)/(R-S)={{thresholds.thresholds.tft_vs_alternate|.4g}}$.
+Theorems 4.5 and 4.8 predict $\delta^*_{\mathrm{Grim}}=(T-R)/(T-P)={{thresholds.thresholds.grim_spe|.4g}}$
+and $\delta^*_{\mathrm{TFT}}=\max\{(T-R)/(T-P),\,(T-R)/(R-S)\}={{thresholds.thresholds.tft_nash|.4g}}$, the second branch being the binding one for Axelrod's payoffs.
 `pdlab.analytic` derives both symbolically with `sympy` (the code solves
 $R/(1-\delta)=T+\delta P/(1-\delta)$ and $R/(1-\delta)=(T+\delta S)/(1-\delta^2)$
 and simplifies), and the test-suite checks that the symbolic expressions
@@ -46,8 +46,7 @@ normalised mean totals $(1-\delta)\,\bar V$ with the exact values:
 
 {{table:thresholds_sim}}
 
-Every simulated value lies within two standard errors of the exact one, and
-the crossing points of the curves in @fig:thresholds fall at the
+Of the {{stat:threshold_comparisons}} comparisons, {{stat:threshold_outside_2se}} fall outside two standard errors and {{stat:threshold_outside_3se}} outside three, as expected for that many independent comparisons; the crossing points of the curves in @fig:thresholds fall at the
 predicted thresholds. Note the qualitative content: the alternating deviation
 is the *binding* one for TFT, which is why TFT needs a more patient player
 ($\delta\ge 2/3$) than Grim Trigger ($\delta \ge 1/2$).
@@ -106,11 +105,11 @@ Table: Mean payoff per round (rank in parentheses) for four noise levels. Strate
 Three features deserve comment.
 
 1. **Nice strategies fill the top of the table**, exactly as Axelrod found:
-   the seven best strategies at $\varepsilon = 0$ are all nice (never the
-   first to defect). Tit-for-Tat itself is {{tournament.leaderboards["0.0"][4].strategy}}-th; the winner is
+   the {{stat:top_nice_run}} best strategies at $\varepsilon = 0$ are all nice (never the
+   first to defect); {{stat:first_non_nice}} is the first that is not. Tit-for-Tat itself is {{stat:rank_TFT_0.0|ordinal}}; the winner is
    {{tournament.leaderboards["0.0"][0].strategy}} with
    {{tournament.leaderboards["0.0"][0].score|.3f}} per round, in line with
-   Beaufils, Delahaye and Mathieu [-@beaufils1996], who introduced Gradual
+   Beaufils, Delahaye and Mathieu [-@beaufilsdelahayemathieu1996], who introduced Gradual
    precisely because it beats TFT in tournaments of this kind. TFT's
    success in 1980 depended on the particular field of entrants, not on
    dominance over all comers (indeed no strategy can be best against every
@@ -119,10 +118,11 @@ Three features deserve comment.
    the stricter reciprocators once $\varepsilon>0$, while Grim collapses:
    a single accidental defection triggers permanent punishment. Figure
    @fig:ranks shows the full rank changes.
-3. **Extortion loses tournaments.** Extort-2 is last at every noise level.
-   Against a fixed population it is out-scored by everything, because it can
-   only "win" *relative* to its current opponent, at the cost of a low
-   absolute score. We return to this in Chapter 7.
+3. **Extortion loses tournaments.** Extort-2 is last without noise and never
+   better than {{stat:extort2_best_rank|ordinal}} of {{stat:n_strategies}} at any noise level (only ALLD and,
+   under heavy noise, ALLC keep it company at the bottom). It can only "win"
+   *relative* to its current opponent, at the cost of a low absolute score.
+   We return to this in Chapter 7.
 
 ![Tournament rank as implementation noise increases.](../figures/tournament_noise_ranks.pdf){#fig:ranks width=80%}
 
@@ -131,7 +131,7 @@ Three features deserve comment.
 ### Cross-check against an independent implementation
 
 To guard against implementation errors we compared `pdlab` with the
-independently developed `axelrod` library [@axelrodlib]. For all
+independently developed `axelrod` library [@knight2016axelrod]. For all
 91 pairings of the thirteen deterministic strategies
 the two libraries produce *identical* 200-round scores, and the memory-one
 vectors of GTFT, Extort-2 and ZDGTFT-2 agree with the library's to machine
@@ -143,7 +143,7 @@ With $\delta=0.9$ the normalised payoff matrix of Chapter 5 is
 
 $$A=\begin{pmatrix} {{replicator.A[0][0]|.2f}} & {{replicator.A[0][1]|.2f}} & {{replicator.A[0][2]|.2f}}\\ {{replicator.A[1][0]|.2f}} & {{replicator.A[1][1]|.2f}} & {{replicator.A[1][2]|.2f}}\\ {{replicator.A[2][0]|.2f}} & {{replicator.A[2][1]|.2f}} & {{replicator.A[2][2]|.2f}}\end{pmatrix},$$
 
-and Theorem 5.3 predicts the unstable fixed point on the ALLD–TFT edge at
+and Theorem 5.8 predicts the unstable fixed point on the ALLD–TFT edge at
 $x^*_{\mathrm{TFT}} = {{replicator.x_star|.4f}} = 1/17$. Integrating the replicator
 equation (`scipy.integrate.solve_ivp`, relative tolerance $10^{-9}$) from 27
 initial conditions confirms the bistable picture of @fig:simplex:
@@ -151,7 +151,7 @@ populations that start with fewer than $x^*$ reciprocators converge to
 all-ALLD; populations above the threshold eliminate ALLD and drift to a
 point on the ALLC–TFT edge that depends on the initial condition (the edge
 is a continuum of neutral fixed points). The finite-difference Jacobian
-eigenvalues agree with the symbolic ones of Theorem 5.4:
+eigenvalues agree with the symbolic ones of Theorem 5.9:
 
 {{table:eigenvalues}}
 
@@ -177,16 +177,16 @@ it.
 In a finite population selection is stochastic. We simulate the
 frequency-dependent Moran process with fitness equal to payoff ($w=1$) and
 compare the fixation probability of a single TFT mutant in an ALLD
-population with the exact formula of Theorem 5.5, for
+population with the exact formula of Theorem 5.13, for
 {{moran_fixation.rows[0].runs}} independent runs per population size:
 
 {{table:moran_fixation}}
 
-All simulated values lie within two standard errors of the exact ones.
+{{stat:fixation_outside_2se}} of the seven simulated values fall outside two standard errors of the exact ones.
 The fixation probability exceeds the neutral value $1/N$ for every $N$:
 a lone reciprocator is *favoured* by selection even though TFT is not an ESS
 in the infinite-population sense, because with $N$ finite it meets itself
-sufficiently often once it has a few copies.
+sufficiently often once it has a few copies. (The $1/3$ law of Theorem 5.14 is a weak-selection, large-$N$ statement; here $w = 1$ and $N \le 32$, so the agreement in sign is a bonus rather than a test of that theorem.)
 
 ### Mutation: how much is needed to break the cooperative equilibrium?
 
@@ -208,9 +208,9 @@ ALLC$\to$ALLD$\to$TFT cycle of Nowak and Sigmund [-@nowaksigmund1992; @nowak2006
 population spends {{moran_mutation.three.rows[1].frac_time_alld_majority|.0%}}
 of its time with an ALLD majority and the cooperation rate has fallen from 1
 to {{moran_mutation.three.rows[1].coop_rate|.2f}}; at $\mu = 0.01$ it is
-{{moran_mutation.three.rows[3].coop_rate|.2f}}, and for $\mu \ge 0.2$ the
+{{moran_mutation.three.rows[3].coop_rate|.2f}}, and by $\mu = 0.5$ the
 population is mutation-dominated, with all three strategies near one third
-and cooperation at {{moran_mutation.three.rows[6].coop_rate|.2f}}. There is
+and cooperation at {{moran_mutation.three.rows[9].coop_rate|.2f}}. There is
 therefore no sharp critical mutation rate: the cooperative equilibrium
 erodes continuously, and the *first* order-of-magnitude of mutation is the
 one that matters, because it opens the neutral drift along the ALLC–TFT
@@ -241,8 +241,11 @@ Sweeping $b$ from 1.05 to 1.99 from random 90% cooperator initial
 conditions gives the phase diagram of @fig:phase (raw values in
 @tbl:phase). The cooperator fraction is a staircase in $b$, because the
 outcome of every local contest depends only on the comparison of integer
-multiples of $b$ against integers; the steps occur at the rational values
-derived in Chapter 5.
+multiples of $b$ against integers. The four thresholds derived in Chapter 5
+($9/8$, $7/5$, $8/5$, $9/5$) are among the step locations; the remaining
+steps (near $1.2$, $1.32$, $1.52$, $1.68$ and $1.76$) come from other local
+configurations, larger clusters and irregular boundaries, that Chapter 5
+does not enumerate.
 
 ![Asymptotic cooperator fraction versus $b$.](../figures/spatial_phase.pdf){#fig:phase width=75%}
 

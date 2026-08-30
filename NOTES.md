@@ -1,7 +1,7 @@
 # NOTES.md — running state (update after each milestone)
 
-## Current state (2026-08-30, evening)
-- All deliverables built. Waiting on REVIEW.md (hostile prof + senior eng subagents), then fix + final commit.
+## Current state (2026-08-30, final)
+- All deliverables built, both reviews applied (REVIEW.md), PDF committed. Remaining ideas: 7-min slide deck; tighten test tolerances; Safari manual check.
 
 ## Earlier state
 - M1 core package DONE and committed. Full reproduce = ~60 s (Moran now 500k steps → ~4 min).

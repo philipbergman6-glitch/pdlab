@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import axelrod as axl  # type: ignore[import-not-found]
+import axelrod as axl
 import numpy as np
 
 from pdlab.game import PayoffMatrix
@@ -77,6 +77,8 @@ def main() -> None:
         s = REGISTRY.make(nm)
         ax = fac()
         vec = getattr(ax, "_four_vector", None)
+        if s.memory_one is None:
+            raise TypeError(f"{nm} has no memory-one vector")
         print(f"- {nm}: pdlab {tuple(round(v, 6) for v in s.memory_one)}; axelrod {ax.name}: {vec}")
 
 

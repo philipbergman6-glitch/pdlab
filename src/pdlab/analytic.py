@@ -69,7 +69,7 @@ def best_responses(pm: PayoffMatrix) -> dict[str, str]:
 # repeated game thresholds
 # --------------------------------------------------------------------------
 V_coop = R / (1 - delta)
-"""Normalised-free discounted value of perpetual mutual cooperation."""
+"""Un-normalised discounted value of perpetual mutual cooperation."""
 
 V_dev_alld = T + delta * P / (1 - delta)
 """Value of deviating to D forever against Grim Trigger (or of ALLD vs TFT)."""
@@ -81,7 +81,8 @@ V_dev_alt = (T + delta * S) / (1 - delta**2)
 def grim_threshold_symbolic() -> sp.Expr:
     """delta* such that Grim Trigger vs Grim Trigger is a SPE: (T-R)/(T-P)."""
     sol = sp.solve(sp.Eq(V_coop, V_dev_alld), delta)
-    assert len(sol) == 1
+    if len(sol) != 1:
+        raise RuntimeError(f"expected a unique solution, got {sol}")
     return sp.simplify(sol[0])
 
 
@@ -94,7 +95,8 @@ def tft_alt_threshold_symbolic() -> sp.Expr:
     """delta such that alternating deviation against TFT is not profitable: (T-R)/(R-S)."""
     sol = sp.solve(sp.Eq(V_coop, V_dev_alt), delta)
     sol = [s for s in sol if s != -1]
-    assert len(sol) == 1
+    if len(sol) != 1:
+        raise RuntimeError(f"expected a unique solution, got {sol}")
     return sp.simplify(sol[0])
 
 
@@ -224,7 +226,8 @@ def replicator_fixed_points_symbolic() -> dict[str, sp.Matrix]:
     rhs = sp.Matrix([x[i] * (f[i] - phi) for i in range(3)])
     # interior point on the TFT-ALLD edge: x1 = 0, TFT and ALLD earn equal payoff
     edge = sp.solve(sp.Eq(f[1].subs(x1, 0), f[2].subs(x1, 0)), x3)
-    assert len(edge) == 1
+    if len(edge) != 1:
+        raise RuntimeError(f"expected a unique edge fixed point, got {edge}")
     x3_star = sp.simplify(edge[0])
     return {
         "ALLC": sp.Matrix([1, 0, 0]),

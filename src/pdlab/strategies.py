@@ -15,6 +15,7 @@ analysis in :mod:`pdlab.markov` consumes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -83,7 +84,8 @@ class MemoryOneStrategy(Strategy):
         self.name = name
 
     def _decide(self, rng: np.random.Generator) -> Move:
-        assert self.memory_one is not None and self.initial is not None
+        if self.memory_one is None or self.initial is None:
+            raise RuntimeError("memory-one strategy not initialised")
         if not self.own:
             p = self.initial
         else:
@@ -96,7 +98,8 @@ class MemoryOneStrategy(Strategy):
         return C if rng.random() < p else D
 
     def clone(self) -> Strategy:
-        assert self.memory_one is not None and self.initial is not None
+        if self.memory_one is None or self.initial is None:
+            raise RuntimeError("memory-one strategy not initialised")
         return MemoryOneStrategy(self.memory_one, self.initial, self.name)
 
 
@@ -149,10 +152,11 @@ class GenerousTitForTat(MemoryOneStrategy):
         pm = payoffs or PayoffMatrix.axelrod()
         g = min(1 - (pm.T - pm.R) / (pm.R - pm.S), (pm.R - pm.P) / (pm.T - pm.P))
         self.generosity = g
+        self._pm = pm
         super().__init__((1, g, 1, g), 1, "GTFT")
 
     def clone(self) -> Strategy:
-        return GenerousTitForTat()
+        return GenerousTitForTat(self._pm)
 
 
 class WinStayLoseShift(MemoryOneStrategy):
@@ -308,21 +312,21 @@ class Gradual(Strategy):
     def __init__(self) -> None:
         super().__init__()
         self.n_defections = 0
-        self.queue: list[Move] = []
+        self.queue: deque[Move] = deque()
 
     def _reset_state(self) -> None:
         self.n_defections = 0
-        self.queue = []
+        self.queue = deque()
 
     def observe(self, own: Move, opp: Move, payoff: float) -> None:
         super().observe(own, opp, payoff)
         if opp is D and not self.queue:
             self.n_defections += 1
-            self.queue = [D] * self.n_defections + [C, C]
+            self.queue = deque([D] * self.n_defections + [C, C])
 
     def _decide(self, rng: np.random.Generator) -> Move:
         if self.queue:
-            return self.queue.pop(0)
+            return self.queue.popleft()
         return C
 
 
@@ -343,11 +347,11 @@ class ZDExtort(MemoryOneStrategy):
 
         pm = payoffs or PayoffMatrix.axelrod()
         p = extort_vector(pm, chi=chi, phi_frac=phi_frac)
-        self.chi, self.phi_frac = chi, phi_frac
+        self.chi, self.phi_frac, self._pm = chi, phi_frac, pm
         super().__init__(p, 0.0, f"EXTORT{chi:g}")
 
     def clone(self) -> Strategy:
-        return ZDExtort(self.chi, self.phi_frac)
+        return ZDExtort(self.chi, self.phi_frac, self._pm)
 
 
 class ZDGenerous(MemoryOneStrategy):
@@ -363,11 +367,11 @@ class ZDGenerous(MemoryOneStrategy):
 
         pm = payoffs or PayoffMatrix.axelrod()
         p = generous_vector(pm, chi=chi, phi_frac=phi_frac)
-        self.chi, self.phi_frac = chi, phi_frac
+        self.chi, self.phi_frac, self._pm = chi, phi_frac, pm
         super().__init__(p, 1.0, f"ZDGTFT{chi:g}")
 
     def clone(self) -> Strategy:
-        return ZDGenerous(self.chi, self.phi_frac)
+        return ZDGenerous(self.chi, self.phi_frac, self._pm)
 
 
 # --------------------------------------------------------------------------

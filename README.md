@@ -34,7 +34,7 @@ uv run pdlab reproduce       # ~2 min: results/canonical.json, 20 figures, READM
 make report                  # pandoc + tectonic → report/build/prisoners_dilemma_report.pdf
 ```
 
-`make all` does all three. `uv run pytest` runs 346 tests (99 % branch coverage, property-based tests with Hypothesis); `make lint` runs ruff and strict mypy. The app is rebuilt from the canonical results with `uv run python scripts/build_app.py`; open `app/index.html` by double-clicking.
+`make all` does all three. `make test` runs the ~350-test suite (99 % branch coverage, property-based tests with Hypothesis; a test asserts that every number in this README matches `results/canonical.json`); `make lint` runs ruff and strict mypy. The app is rebuilt from the canonical results with `uv run python scripts/build_app.py`; open `app/index.html` by double-clicking.
 
 Other entry points: `uv run pdlab tournament --noise 0.05`, `uv run pdlab thresholds --T 5 --R 3 --P 1 --S 0`, `uv run pdlab play --me WSLS --opponent EXTORT2 --rounds 30`.
 
@@ -64,7 +64,7 @@ Other entry points: `uv run pdlab tournament --noise 0.05`, `uv run pdlab thresh
                               │ reproduce.py / cli │  results/canonical.json, app payload
                               └─────────┬──────────┘
                     ┌───────────────────┼───────────────────┐
-             report/*.md          app/template.html     tests/ (346)
+             report/*.md          app/template.html     tests/ (~350)
        (numbers templated from    (payload inlined by    property tests,
         canonical.json at build)   scripts/build_app.py)  closed-form checks
 ```

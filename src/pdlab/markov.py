@@ -23,6 +23,8 @@ from numpy.typing import NDArray
 from pdlab.game import PayoffMatrix
 
 Vec4 = NDArray[np.float64]
+Mat4 = NDArray[np.float64]
+MemoryOneT = tuple[float, float, float, float]
 Vector = Sequence[float] | NDArray[np.floating[Any]]
 """Anything convertible to a length-4 float array."""
 
@@ -55,7 +57,7 @@ def swap_perspective(q: Vector) -> Vec4:
     return np.asarray(arr[[0, 2, 1, 3]], dtype=float)
 
 
-def transition_matrix(p: Vector, q: Vector, eps: float = 0.0) -> Vec4:
+def transition_matrix(p: Vector, q: Vector, eps: float = 0.0) -> Mat4:
     """Row-stochastic 4x4 transition matrix over (CC, CD, DC, DD)."""
     px = noisy(p, eps)
     qy = noisy(swap_perspective(q), eps)
@@ -260,6 +262,3 @@ def generous_vector(pm: PayoffMatrix, chi: float = 2.0, phi_frac: float = 1.0) -
     phi = phi_frac * _max_phi(pm, chi, pm.R)
     p = zd_vector(pm, alpha=phi, beta=-phi * chi, gamma=phi * (chi - 1) * pm.R)
     return (float(p[0]), float(p[1]), float(p[2]), float(p[3]))
-
-
-MemoryOneT = tuple[float, float, float, float]

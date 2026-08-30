@@ -33,7 +33,7 @@ Status legend: [ ] todo  [~] in progress  [x] done
 
 ## M6 README, REVIEW (hostile prof + senior eng), cross-checks
 - [x] README.md w/ hero GIF
-- [ ] REVIEW.md
+- [x] REVIEW.md (prof + engineer findings, all resolved or noted)
 - [x] 3 published cross-checks (Nowak–May 0.318, Stewart–Plotkin ZD vectors, Beaufils Gradual>TFT) + axelrod lib 91/91
 
 ## Original contribution decision

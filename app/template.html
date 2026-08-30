@@ -753,17 +753,14 @@ var STRATS = [
   { name:"WSLS", group:"nice", desc:"Pavlov: repeat after R or T, switch otherwise",
     make:function(){ return memOne([1,0,0,1],1); } },
   { name:"CTFT", group:"nice", desc:"contrite TFT: apologises for its own slips",
-    make:function(){ var opp=[], contrite=false, intended="C"; return {
-      play:function(){
-        if(opp.length===0) intended="C";
-        else if(contrite) intended="C";
-        else intended = opp[opp.length-1];
-        return intended;
-      },
+    make:function(){ var myGood=true, oppGood=true; return {
+      // standing (Boerlijst, Nowak & Sigmund 1997): defect only when I am in good
+      // standing and the opponent is not; mirrors pdlab.strategies.ContriteTitForTat
+      play:function(){ return (myGood && !oppGood) ? "D" : "C"; },
       observe:function(o,q){
-        opp.push(q);
-        if(contrite){ if(o==="C") contrite=false; }
-        else if(o==="D" && intended==="C" && q==="C") contrite=true;
+        var mp=myGood, op=oppGood;
+        myGood = !(o==="D" && op);
+        oppGood = !(q==="D" && mp);
       } }; } },
   { name:"SOFTMAJ", group:"nice", desc:"cooperates while you have cooperated at least as often",
     make:function(){ var nc=0, n=0; return {

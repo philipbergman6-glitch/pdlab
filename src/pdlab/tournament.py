@@ -25,18 +25,22 @@ class TournamentResult:
 
     @property
     def mean_payoff(self) -> np.ndarray:
-        """(n, n) payoff matrix averaged over repetitions."""
+        """(n, n) payoff matrix averaged over repetitions.
+
+        The diagonal is NaN when the tournament was run with ``include_self=False``:
+        those matches were never played.
+        """
         return np.asarray(self.payoff.mean(axis=0))
 
     def scores(self) -> pd.DataFrame:
-        """Mean score per round (averaged over all opponents incl. self) per rep."""
-        per_rep = self.payoff.mean(axis=2)  # (reps, n)
+        """Mean score per round (averaged over the opponents actually played) per rep."""
+        per_rep = np.nanmean(self.payoff, axis=2)  # (reps, n)
         df = pd.DataFrame(
             {
                 "strategy": self.names,
                 "score": per_rep.mean(axis=0),
                 "score_sd": per_rep.std(axis=0, ddof=1) if per_rep.shape[0] > 1 else 0.0,
-                "coop_rate": self.coop.mean(axis=(0, 2)),
+                "coop_rate": np.nanmean(self.coop, axis=(0, 2)),
             }
         )
         df = df.sort_values("score", ascending=False, ignore_index=True)
@@ -85,11 +89,4 @@ def round_robin(
                 payoff[r, j, i] = res.mean2
                 coop[r, i, j] = res.cooperation_rate(1)
                 coop[r, j, i] = res.cooperation_rate(2)
-    if not include_self:
-        # average over opponents only
-        for k in range(n):
-            payoff[:, k, k] = np.nan
-            coop[:, k, k] = np.nan
-        payoff = np.where(np.isnan(payoff), np.nanmean(payoff, axis=2, keepdims=True), payoff)
-        coop = np.where(np.isnan(coop), np.nanmean(coop, axis=2, keepdims=True), coop)
     return TournamentResult(names, payoff, coop, rounds, noise)

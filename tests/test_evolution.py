@@ -165,10 +165,24 @@ def test_moran_without_stopping_runs_the_full_budget():
 
 def test_moran_mutation_keeps_the_process_running():
     rng = np.random.default_rng(2)
-    res = moran_process(A3, [0, 19, 1], steps=2000, rng=rng, w=0.5, mutation=0.05)
-    assert res.fixated is None  # mutation disables the fixation stop
+    res = moran_process(
+        A3, [0, 19, 1], steps=2000, rng=rng, w=0.5, mutation=0.05, stop_at_fixation=False
+    )
+    assert res.fixated is None
     assert res.counts.shape == (2001, 3)
     assert res.counts[:, 0].max() > 0  # ALLC introduced by mutation
+
+
+def test_moran_stop_at_fixation_with_mutation_is_rejected():
+    with pytest.raises(ValueError, match="stop_at_fixation"):
+        moran_process(A3, [0, 19, 1], steps=10, rng=np.random.default_rng(0), mutation=0.1)
+
+
+def test_moran_record_false_keeps_only_endpoints():
+    rng = np.random.default_rng(3)
+    res = moran_process(A3, [0, 19, 1], steps=500, rng=rng, w=0.5, record=False)
+    assert res.counts.shape == (2, 3)
+    assert res.counts.sum(axis=1).tolist() == [20, 20]
 
 
 def test_moran_negative_fitness_raises():

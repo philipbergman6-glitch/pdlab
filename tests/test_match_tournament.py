@@ -7,14 +7,18 @@ import pytest
 
 from pdlab.game import C, PayoffMatrix
 from pdlab.match import play_match
-from pdlab.strategies import REGISTRY
+from pdlab.strategies import REGISTRY, Strategy
 from pdlab.tournament import round_robin
 
 PM = PayoffMatrix.axelrod()
 
 
-def _make(*names):
+def _make(*names: str) -> list[Strategy]:
     return [REGISTRY.make(n) for n in names]
+
+
+def _pair(a: str, b: str) -> tuple[Strategy, Strategy]:
+    return REGISTRY.make(a), REGISTRY.make(b)
 
 
 # --------------------------------------------------------------------------
@@ -29,17 +33,17 @@ def test_a_strategy_cannot_play_itself():
 @pytest.mark.parametrize("rounds", [0, -1])
 def test_invalid_rounds_raise(rounds):
     with pytest.raises(ValueError, match="rounds must be"):
-        play_match(*_make("TFT", "ALLD"), rounds, PM, np.random.default_rng(0))
+        play_match(*_pair("TFT", "ALLD"), rounds, PM, np.random.default_rng(0))
 
 
 @pytest.mark.parametrize("noise", [-0.01, 0.51, 1.0])
 def test_invalid_noise_raises(noise):
     with pytest.raises(ValueError, match="noise must be"):
-        play_match(*_make("TFT", "ALLD"), 10, PM, np.random.default_rng(0), noise=noise)
+        play_match(*_pair("TFT", "ALLD"), 10, PM, np.random.default_rng(0), noise=noise)
 
 
 def test_noiseless_tft_vs_tft_cooperates_throughout():
-    res = play_match(*_make("TFT", "TFT"), 50, PM, np.random.default_rng(0))
+    res = play_match(*_pair("TFT", "TFT"), 50, PM, np.random.default_rng(0))
     assert all(m is C for m in res.moves1)
     assert all(m is C for m in res.moves2)
     assert res.score1 == res.score2 == 50 * PM.R
@@ -50,7 +54,7 @@ def test_noiseless_tft_vs_tft_cooperates_throughout():
 
 
 def test_match_result_accounting_for_allc_vs_alld():
-    res = play_match(*_make("ALLC", "ALLD"), 10, PM, np.random.default_rng(0))
+    res = play_match(*_pair("ALLC", "ALLD"), 10, PM, np.random.default_rng(0))
     assert res.score1 == 10 * PM.S
     assert res.score2 == 10 * PM.T
     assert res.cooperation_rate(1) == 1.0
@@ -58,16 +62,16 @@ def test_match_result_accounting_for_allc_vs_alld():
 
 
 def test_noise_is_seed_reproducible_and_seed_dependent():
-    a = play_match(*_make("TFT", "TFT"), 100, PM, np.random.default_rng(7), noise=0.1)
-    b = play_match(*_make("TFT", "TFT"), 100, PM, np.random.default_rng(7), noise=0.1)
-    c = play_match(*_make("TFT", "TFT"), 100, PM, np.random.default_rng(8), noise=0.1)
+    a = play_match(*_pair("TFT", "TFT"), 100, PM, np.random.default_rng(7), noise=0.1)
+    b = play_match(*_pair("TFT", "TFT"), 100, PM, np.random.default_rng(7), noise=0.1)
+    c = play_match(*_pair("TFT", "TFT"), 100, PM, np.random.default_rng(8), noise=0.1)
     assert a.moves1 == b.moves1 and a.moves2 == b.moves2
     assert a.score1 == b.score1
     assert (a.moves1, a.moves2) != (c.moves1, c.moves2)
 
 
 def test_noise_makes_tft_vs_tft_defect_sometimes():
-    res = play_match(*_make("TFT", "TFT"), 400, PM, np.random.default_rng(1), noise=0.05)
+    res = play_match(*_pair("TFT", "TFT"), 400, PM, np.random.default_rng(1), noise=0.05)
     assert 0.0 < res.cooperation_rate(1) < 1.0
     # noisy TFT vs TFT tends to the average of all four payoffs, 2.25
     assert res.mean1 == pytest.approx(2.25, abs=0.5)
@@ -137,10 +141,12 @@ def test_include_self_false_excludes_the_diagonal_match():
     without = round_robin(_make(*names), rounds=40, include_self=False)
     i = without.names.index("ALLC")
     off_diag = [without.mean_payoff[i, k] for k in range(3) if k != i]
-    # the diagonal is filled with the mean over the true opponents
-    assert without.mean_payoff[i, i] == pytest.approx(np.mean(off_diag))
+    # the diagonal match was never played: it must be reported as NaN, not fabricated
+    assert np.isnan(without.mean_payoff[i, i])
     assert with_self.mean_payoff[i, i] == pytest.approx(PM.R)
-    assert without.scores()["score"].iloc[0] > 0
+    # scores average over the opponents actually played
+    row = without.scores().set_index("strategy").loc["ALLC", "score"]
+    assert row == pytest.approx(np.mean(off_diag))
 
 
 def test_round_robin_is_reproducible_under_noise():

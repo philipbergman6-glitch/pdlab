@@ -23,13 +23,37 @@ from pdlab.evolution import (
 from pdlab.finite import backward_induction
 from pdlab.game import PayoffMatrix
 from pdlab.learning import QLearner
-from pdlab.markov import stationary_payoffs
+from pdlab.markov import expected_payoffs, stationary_payoffs
 from pdlab.match import play_match
 from pdlab.spatial import SpatialPD
 from pdlab.strategies import REGISTRY, MemoryOneStrategy, Strategy
 from pdlab.tournament import round_robin
 
 Result = dict[str, Any]
+
+
+def _memory_one(s: Strategy) -> tuple[float, float, float, float]:
+    """The memory-one vector of ``s``; raises for strategies that have none."""
+    if not isinstance(s, MemoryOneStrategy) or s.memory_one is None:
+        raise TypeError(f"{s.name} is not a memory-one strategy")
+    return s.memory_one
+
+
+def _long_run_payoffs(
+    p: tuple[float, ...], q: tuple[float, ...], p0: float, q0: float, pm: PayoffMatrix
+) -> tuple[float, float]:
+    """Noise-free long-run payoffs: the stationary payoffs when the chain is
+    irreducible, otherwise the exact 20 000-round average from the initial moves."""
+    try:
+        return stationary_payoffs(p, q, pm, 0.0)
+    except ValueError:
+        return expected_payoffs(p, q, p0, q0, pm, rounds=20_000)
+
+
+def _sample_sd(vals: list[float]) -> float:
+    """Sample standard deviation (ddof=1); NaN for a single value."""
+    return float(np.std(vals, ddof=1)) if len(vals) > 1 else float("nan")
+
 
 NOISE_LEVELS = (0.0, 0.01, 0.05, 0.1)
 MEMORY_ONE_FOR_NOISE = ("TFT", "GTFT", "WSLS", "STFT", "ALLC", "ALLD", "EXTORT2", "ZDGTFT2")
@@ -138,15 +162,15 @@ def simulate_discounted_total(
     """Mean *unnormalised* total payoff of player 1 with geometric stopping (continuation delta)."""
     if not 0 <= delta < 1:
         raise ValueError("delta in [0,1)")
-    tot = 0.0
-    tot_sq = 0.0
-    for _ in range(n_matches):
+    if n_matches < 2:
+        raise ValueError("n_matches must be >= 2 to estimate a standard error")
+    totals = np.empty(n_matches)
+    for k in range(n_matches):
         rounds = int(rng.geometric(1 - delta))  # >= 1, P(n) = (1-delta) delta^(n-1)
         res = play_match(s1.clone(), s2.clone(), rounds, pm, rng)
-        tot += res.score1
-        tot_sq += res.score1**2
-    mean = tot / n_matches
-    se = float(np.sqrt(max(tot_sq / n_matches - mean**2, 0.0) / n_matches))
+        totals[k] = res.score1
+    mean = float(totals.mean())
+    se = float(np.std(totals, ddof=1) / np.sqrt(n_matches))
     return mean, se
 
 
@@ -227,8 +251,7 @@ def exp_noise_selfplay(pm: PayoffMatrix, scale: Scale, seed: int = 3) -> Result:
     sim_eps = [0.01, 0.05, 0.1, 0.2]
     for name in MEMORY_ONE_FOR_NOISE:
         s = REGISTRY.make(name)
-        assert isinstance(s, MemoryOneStrategy) and s.memory_one is not None
-        p = s.memory_one
+        p = _memory_one(s)
         exact = [stationary_payoffs(p, p, pm, e)[0] for e in eps_grid]
         sims = []
         for e in sim_eps:
@@ -327,13 +350,18 @@ def exp_moran_fixation(pm: PayoffMatrix, scale: Scale, delta: float = 0.9, seed:
         exact = fixation_probability(A, mutant=2, resident=1, N=N, w=1.0)
         neutral = 1 / N
         wins = 0
+        unresolved = 0
         runs = scale.moran_runs
         for _ in range(runs):
             counts = np.zeros(3, dtype=int)
             counts[1], counts[2] = N - 1, 1
-            r = moran_process(A, counts, steps=200 * N * N, rng=rng, w=1.0)
+            r = moran_process(A, counts, steps=200 * N * N, rng=rng, w=1.0, record=False)
             if r.fixated == 2:
                 wins += 1
+            elif r.fixated is None:
+                unresolved += 1
+        if unresolved:
+            raise RuntimeError(f"{unresolved} Moran runs did not fix within 200 N^2 steps (N={N})")
         rows.append({"N": N, "exact": exact, "neutral": neutral, "sim": wins / runs, "runs": runs})
     return _result({"delta": delta, "rows": rows})
 
@@ -450,7 +478,7 @@ def exp_spatial(scale: Scale, seed: int = 8) -> Result:
             ser, _ = g.run(scale.lattice_steps)
             vals.append(ser[-tail:].mean())
         phase.append(
-            {"b": float(b), "coop_mean": float(np.mean(vals)), "coop_sd": float(np.std(vals))}
+            {"b": float(b), "coop_mean": float(np.mean(vals)), "coop_sd": _sample_sd(vals)}
         )
     # time series & snapshots at b = 1.9
     rng = np.random.default_rng(seed)
@@ -499,19 +527,28 @@ def exp_spatial(scale: Scale, seed: int = 8) -> Result:
 def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
     ext = REGISTRY.make("EXTORT2")
     gen = REGISTRY.make("ZDGTFT2")
-    assert isinstance(ext, MemoryOneStrategy) and isinstance(gen, MemoryOneStrategy)
-    assert ext.memory_one is not None and gen.memory_one is not None
+    ext_p, gen_p = _memory_one(ext), _memory_one(gen)
     # (a) exact payoffs of Extort-2 vs every memory-one strategy + random opponents
     rng = np.random.default_rng(seed)
     scatter = []
     for name in MEMORY_ONE_FOR_NOISE:
         s = REGISTRY.make(name)
-        assert isinstance(s, MemoryOneStrategy) and s.memory_one is not None
-        sx, sy = stationary_payoffs(ext.memory_one, s.memory_one, pm, 0.01)
-        scatter.append({"opponent": name, "s_X": sx, "s_Y": sy})
+        q = _memory_one(s)
+        q0 = s.initial if s.initial is not None else 1.0
+        sx, sy = _long_run_payoffs(ext_p, q, 0.0, q0, pm)
+        sx_noisy, sy_noisy = stationary_payoffs(ext_p, q, pm, 0.01)
+        scatter.append(
+            {
+                "opponent": name,
+                "s_X": sx,
+                "s_Y": sy,
+                "s_X_eps": sx_noisy,
+                "s_Y_eps": sy_noisy,
+            }
+        )
     for _ in range(40):
-        q = rng.random(4)
-        sx, sy = stationary_payoffs(ext.memory_one, q, pm, 0.0)
+        q_rand = rng.random(4)
+        sx, sy = stationary_payoffs(ext_p, q_rand, pm, 0.0)
         scatter.append({"opponent": "random", "s_X": sx, "s_Y": sy})
     # (b) Extort-2 vs Q-learner over time
     learner_runs = []
@@ -542,9 +579,7 @@ def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
     names = list(ZD_EVO_SET)
     vecs = []
     for nm in names:
-        s = REGISTRY.make(nm)
-        assert isinstance(s, MemoryOneStrategy) and s.memory_one is not None
-        vecs.append(s.memory_one)
+        vecs.append(_memory_one(REGISTRY.make(nm)))
     A = np.array([[stationary_payoffs(p, q, pm, 0.01)[0] for q in vecs] for p in vecs])
     n = len(names)
     x0 = np.full(n, 1 / n)
@@ -558,8 +593,8 @@ def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
     mf = mr.frequencies[len(mr.frequencies) // 2 :].mean(axis=0)
     return _result(
         {
-            "extort2": ext.memory_one,
-            "zdgtft2": gen.memory_one,
+            "extort2": ext_p,
+            "zdgtft2": gen_p,
             "chi": 2.0,
             "scatter": scatter,
             "learner": learner_runs,

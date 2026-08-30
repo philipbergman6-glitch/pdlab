@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from pdlab import figures as figs
@@ -128,9 +127,10 @@ def reproduce(root: Path, scale: Scale, hero: bool = True) -> dict[str, Any]:
     t0 = time.time()
     pm = PayoffMatrix.axelrod()
     res = run_all(scale, pm)
-    res["elapsed_s"] = time.time() - t0
+    t_experiments = time.time() - t0
     results_dir, fig_dir = root / "results", root / "figures"
     results_dir.mkdir(parents=True, exist_ok=True)
+    # canonical.json must be byte-reproducible: no timings inside it
     (results_dir / "canonical.json").write_text(json.dumps(res, indent=1))
     (results_dir / "app_payload.json").write_text(json.dumps(_app_payload(res)))
     write_tables(res, results_dir)
@@ -139,7 +139,9 @@ def reproduce(root: Path, scale: Scale, hero: bool = True) -> dict[str, Any]:
         make_hero_gif(
             fig_dir, L=min(99, max(21, scale.lattice - 1)), steps=min(80, scale.lattice_steps)
         )
-    res["elapsed_total_s"] = time.time() - t0
+    timing = {"experiments_s": t_experiments, "total_s": time.time() - t0}
+    (results_dir / "timing.json").write_text(json.dumps(timing, indent=1))
+    res["elapsed_total_s"] = timing["total_s"]
     return res
 
 
@@ -151,4 +153,4 @@ def load_canonical(root: Path) -> dict[str, Any]:
     return data
 
 
-__all__ = ["load_canonical", "make_figures", "make_hero_gif", "np", "reproduce", "write_tables"]
+__all__ = ["load_canonical", "make_figures", "make_hero_gif", "reproduce", "write_tables"]

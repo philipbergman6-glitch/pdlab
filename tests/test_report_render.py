@@ -13,7 +13,7 @@ from pdlab.experiments import Scale, run_all
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _load_render():  # type: ignore[no-untyped-def]
+def _load_render():
     spec = importlib.util.spec_from_file_location(
         "render_report", ROOT / "scripts" / "render_report.py"
     )

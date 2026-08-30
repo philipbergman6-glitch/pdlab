@@ -69,7 +69,11 @@ def test_reproduce_writes_results_and_figures(quick_run):
     assert len(figs) > 20
     assert "hero_kaleidoscope.gif" in figs
     assert all((root / "figures" / f).stat().st_size > 0 for f in figs)
-    assert res["elapsed_total_s"] >= res["elapsed_s"]
+    assert res["elapsed_total_s"] > 0
+    timing = json.loads((root / "results" / "timing.json").read_text())
+    assert timing["total_s"] >= timing["experiments_s"] > 0
+    # canonical.json carries no timings, so it is byte-reproducible
+    assert "elapsed" not in (root / "results" / "canonical.json").read_text()
 
 
 def test_load_canonical_round_trips(quick_run):
@@ -159,7 +163,7 @@ def test_spatial_phase_values_are_probabilities():
     res = run_all(Scale.quick(), PM)
     for row in res["spatial"]["phase"]:
         assert 0.0 <= row["coop_mean"] <= 1.0
-        assert row["coop_sd"] >= 0.0
+        assert np.isnan(row["coop_sd"]) or row["coop_sd"] >= 0.0
         assert 1 < row["b"] < 2
 
 

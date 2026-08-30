@@ -6,6 +6,8 @@ OUT := build/prisoners_dilemma_report.pdf
 
 all: $(OUT)
 
+.PHONY: all render clean
+
 render: $(CHAPTERS) 00_meta.yaml references.bib ../results/canonical.json
 	cd .. && uv run python scripts/render_report.py
 

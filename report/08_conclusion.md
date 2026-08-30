@@ -5,8 +5,8 @@ attached to it, and this report has tried to show how they fit together
 by treating each of them both analytically and numerically.
 
 *Rationality.* In the one-shot game defection strictly dominates and
-$(D,D)$ is the unique Nash equilibrium (Theorem 2.5); finite repetition
-changes nothing (Theorem 3.1); infinite repetition with discount factor
+$(D,D)$ is the unique Nash equilibrium (Theorem 2.8); finite repetition
+changes nothing (Theorems 3.4 and 3.5); infinite repetition with discount factor
 $\delta$ changes everything, but only in the sense of the folk theorems:
 cooperation becomes *sustainable*, by Grim Trigger for
 $\delta \ge (T-R)/(T-P)$ and by Tit-for-Tat as a Nash equilibrium for
@@ -21,7 +21,7 @@ $x^* = {{replicator.x_star|.4f}}$ (at $\delta = 0.9$) to escape defection.
 The numerical trajectories, the symbolic Jacobian spectra and the fitted
 convergence rate all agree. In finite populations a single reciprocator is
 nevertheless *favoured* by selection, with fixation probability above
-$1/N$ and matching Nowak's exact formula. Mutation destroys cooperation
+$1/N$ and matching Nowak's exact formula. Mutation erodes cooperation
 in the three-strategy world through the ALLC$\to$ALLD$\to$TFT cycle but
 not in a rich strategy space, where random mutants are mostly conditional
 cooperators. On a lattice, cooperation survives without any memory at all,
@@ -35,7 +35,7 @@ generous strategies lose only $O(\varepsilon)$, and selection under noise
 tracks exactly that ranking. Zero-determinant extortion pins every
 opponent, including a Q-learner, to a line on which the extortioner earns
 more, yet it loses tournaments and goes extinct in populations, because it
-cannot cooperate with itself.
+cannot cooperate with itself, and is driven to extinction or to a small mutation–selection residue.
 
 The through-line is that *which theory applies is a modelling decision*:
 the same game predicts defection, cooperation, or coexistence depending on
@@ -50,7 +50,7 @@ The accompanying repository contains:
 * `src/pdlab/`: a typed Python package (game, strategies, exact Markov
   analysis, symbolic thresholds, replicator and Moran dynamics, spatial
   lattice, Q-learning, tournament engine, experiments, figures, CLI).
-* `tests/`: 344 tests including property-based tests (Hypothesis) of the
+* `tests/`: about 350 tests including property-based tests (Hypothesis) of the
   payoff invariants, exact checks of every closed form against simulation,
   and symbolic-versus-numerical checks of the Jacobian spectra; coverage
   is 99% and continuous integration runs the suite, `ruff` and `mypy` on

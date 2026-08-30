@@ -231,7 +231,7 @@ def tables(d: dict[str, Any]) -> dict[str, str]:
         rows.append(
             [
                 opp,
-                len(runs),
+                str(len(runs)),
                 f"{lm:.3f}",
                 f"{om:.3f}",
                 f"{min(r['final_learner'] for r in runs):.2f}–{max(r['final_learner'] for r in runs):.2f}",
@@ -252,9 +252,71 @@ def tables(d: dict[str, Any]) -> dict[str, str]:
     return t
 
 
+def stats(d: dict[str, Any]) -> dict[str, Any]:
+    """Derived scalars quoted in the prose (so the prose cannot drift from the data)."""
+    out: dict[str, Any] = {}
+    sims = d["thresholds"]["simulation"]
+    n_cmp = 0
+    n_out2 = 0
+    n_out3 = 0
+    for s_ in sims:
+        for k in ("coop", "alld", "alt"):
+            n_cmp += 1
+            z = abs(s_[f"{k}_sim"] - s_[f"{k}_exact"]) / s_[f"{k}_se"]
+            n_out2 += z > 2
+            n_out3 += z > 3
+    out["threshold_comparisons"] = n_cmp
+    out["threshold_outside_2se"] = n_out2
+    out["threshold_outside_3se"] = n_out3
+    board = d["tournament"]["leaderboards"]
+    for e, rows in board.items():
+        for r in rows:
+            out[f"rank_{r['strategy']}_{e}"] = r["rank"]
+    n = len(board["0.0"])
+    out["n_strategies"] = n
+    out["extort2_worst_rank"] = max(out[f"rank_EXTORT2_{e}"] for e in board)
+    out["extort2_best_rank"] = min(out[f"rank_EXTORT2_{e}"] for e in board)
+    nice = {"ALLC", "TFT", "GTFT", "TF2T", "GRIM", "WSLS", "CTFT", "SOFTMAJ", "GRADUAL", "ZDGTFT2"}
+    top_nice = 0
+    for r in board["0.0"]:
+        if r["strategy"] in nice:
+            top_nice += 1
+        else:
+            break
+    out["top_nice_run"] = top_nice
+    out["first_non_nice"] = board["0.0"][top_nice]["strategy"]
+    mf = d["moran_fixation"]["rows"]
+    out["fixation_outside_2se"] = sum(
+        abs(r["sim"] - r["exact"]) > 2 * (r["sim"] * (1 - r["sim"]) / r["runs"]) ** 0.5 for r in mf
+    )
+    out["fixation_N_min"], out["fixation_N_max"] = mf[0]["N"], mf[-1]["N"]
+    return out
+
+
+ORDINALS = {
+    1: "first",
+    2: "second",
+    3: "third",
+    4: "fourth",
+    5: "fifth",
+    6: "sixth",
+    7: "seventh",
+    8: "eighth",
+    9: "ninth",
+    10: "tenth",
+}
+
+
 def render(text: str, d: dict[str, Any], t: dict[str, str]) -> str:
+    st = stats(d)
+
     def sub(m: re.Match[str]) -> str:
         key, spec = m.group(1), m.group(2)
+        if key.startswith("stat:"):
+            v = st[key[5:].strip()]
+            if spec == "ordinal":
+                return ORDINALS.get(int(v), f"{v}th")
+            return fmt(v, spec)
         if key.startswith("table:"):
             name = key[6:].strip()
             if name not in t:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 import pytest
 
@@ -11,6 +13,7 @@ from pdlab.strategies import (
     REGISTRY,
     ContriteTitForTat,
     GenerousTitForTat,
+    GrimTrigger,
     MemoryOneStrategy,
     Random,
     Registry,
@@ -22,7 +25,7 @@ PM = PayoffMatrix.axelrod()
 STOCHASTIC = {"GTFT", "RANDOM", "EXTORT2", "ZDGTFT2", "QLEARN"}
 
 
-def _s(moves: tuple[Move, ...]) -> str:
+def _s(moves: Sequence[Move]) -> str:
     return "".join(m.value for m in moves)
 
 
@@ -208,7 +211,7 @@ def test_memory_one_rejects_probabilities_outside_unit_interval(probs, initial):
 
 def test_memory_one_wrong_length_raises():
     with pytest.raises(ValueError):
-        MemoryOneStrategy((1, 0, 0), 1.0, "BAD")
+        MemoryOneStrategy((1, 0, 0), 1.0, "BAD")  # type: ignore[arg-type]
 
 
 def test_random_p_validation_and_clone_keeps_p():
@@ -249,10 +252,11 @@ def test_clone_returns_fresh_independent_object(name):
 
 def test_reset_clears_history_and_state():
     grim = REGISTRY.make("GRIM")
+    assert isinstance(grim, GrimTrigger)
     against_script(grim, "DDDD")
-    assert grim.triggered
+    assert bool(grim.triggered)
     grim.reset()
-    assert not grim.triggered
+    assert not bool(grim.triggered)
     assert grim.own == [] and grim.score == 0.0
     assert against_script(grim, "CCC") == "CCC"
 

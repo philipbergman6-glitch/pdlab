@@ -35,7 +35,7 @@ The canonical numerical instance used throughout this report is Axelrod's $(T,R,
 
 Condition (2.1) is what makes the game a dilemma: $T > R$ means unilateral defection beats mutual cooperation, $P > S$ means defection beats cooperation against a defector, and $R > P$ means mutual cooperation beats mutual defection. Condition (2.2) is a separate requirement, and it is worth being explicit about its role.
 
-**Remark 2.3 (Why $2R > T+S$).** Consider two players who could coordinate on a public randomisation or on an alternating schedule: player 1 plays $D$ while player 2 plays $C$ in odd rounds, and the roles swap in even rounds. The long-run average payoff to each is $(T+S)/2$. Without (2.2) this exceeds $R$, and "cooperation'' in the sense of $(C,C)$ would no longer be the jointly best arrangement --- the efficient outcome would be *taking turns exploiting each other*, and the entire literature on sustaining $(C,C)$ by repetition would be pointed at the wrong target. Condition (2.2) says precisely that $(R,R)$ maximises the sum of payoffs over the feasible set; see Theorem 2.9 and, in the repeated game, Theorem 4.14. Note that (2.2) does not follow from (2.1): $(T,R,P,S) = (5, 2.4, 1, 0)$ satisfies (2.1) but has $2R = 4.8 < 5 = T+S$. The class `PayoffMatrix` enforces (2.2) unconditionally, and (2.1) unless `strict=False`.
+**Remark 2.3 (Why $2R > T+S$).** Consider two players who could coordinate on a public randomisation or on an alternating schedule: player 1 plays $D$ while player 2 plays $C$ in odd rounds, and the roles swap in even rounds. The long-run average payoff to each is $(T+S)/2$. Without (2.2) this is at least $R$, and "cooperation'' in the sense of $(C,C)$ would no longer be the jointly best arrangement --- the efficient outcome would be *taking turns exploiting each other*, and the entire literature on sustaining $(C,C)$ by repetition would be pointed at the wrong target. Condition (2.2) says precisely that $(R,R)$ maximises the sum of payoffs over the feasible set; see Theorem 2.9 and, in the repeated game, Lemma 4.12. Note that (2.2) does not follow from (2.1): $(T,R,P,S) = (5, 2.4, 1, 0)$ satisfies (2.1) but has $2R = 4.8 < 5 = T+S$. The class `PayoffMatrix` enforces (2.2) unconditionally, and (2.1) unless `strict=False`.
 
 ## Dominance, equilibrium, efficiency
 
@@ -72,7 +72,7 @@ Since $r \in [0,1]$ and both $T-R$ and $P-S$ are strictly positive, the bracket 
 
 Note that the argument uses only strict dominance: in *any* finite game, a strictly dominated action receives probability zero in every Nash equilibrium, and if each player has a strictly dominant action the profile of those actions is the unique equilibrium. This is `analytic.one_shot_facts`, which reports `dd_unique_nash` exactly when `d_dominant` holds.
 
-**Theorem 2.9 (Efficiency classification).** In a strict Prisoner's Dilemma with feasible set $V$ as in (2.3), the profiles $(C,C)$, $(C,D)$ and $(D,C)$ are Pareto-efficient in $V$, and $(D,D)$ is not. In particular the unique Nash equilibrium is the unique Pareto-inefficient pure profile, and it is Pareto-dominated by $(C,C)$.
+**Theorem 2.9 (Efficiency classification).** In a strict Prisoner's Dilemma with feasible set $V$ as in (2.3), the payoff vectors of the profiles $(C,C)$, $(C,D)$ and $(D,C)$ are Pareto-efficient in $V$, and that of $(D,D)$ is not. In particular the unique Nash equilibrium is the unique Pareto-inefficient pure profile, and it is Pareto-dominated by $(C,C)$.
 
 *Proof.* *(i) $(D,D)$ is inefficient.* Its payoff vector is $(P,P)$ and $(R,R) \in V$ with $R > P$ in both coordinates, so $(R,R)$ Pareto-dominates $(P,P)$.
 
@@ -103,7 +103,7 @@ The donation game is the standard vehicle for the biological literature, because
 $$
 R = 1, \qquad T = b, \qquad P = S = 0,
 $$
-i.e. a donation game in the limit $c \to 0$ after rescaling. Its payoff bimatrix is
+a distinct degenerate parametrisation in which the sucker payoff is raised to the punishment payoff (it is not a limit of the donation game: rescaling $\mathrm{Don}(b,c)$ to $R = 1$ and letting $c \to 0$ gives the trivial game $T = R = 1$). Its payoff bimatrix is
 
 |          |     $C$     |     $D$     |
 |:--------:|:-----------:|:-----------:|

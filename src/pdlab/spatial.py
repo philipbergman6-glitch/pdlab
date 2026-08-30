@@ -44,7 +44,7 @@ class SpatialPD:
     def __post_init__(self) -> None:
         if not 1 < self.b < 2:
             raise ValueError("Nowak-May requires 1 < b < 2")
-        self.grid = np.asarray(self.grid, dtype=bool)
+        self.grid = np.array(self.grid, dtype=bool, copy=True)
         if self.grid.ndim != 2 or min(self.grid.shape) < 3:
             raise ValueError("grid must be 2-D with at least 3x3 sites")
 
@@ -132,7 +132,11 @@ class SpatialPD:
         asynchronous: bool = False,
         snapshots: int = 0,
     ) -> tuple[FGrid, list[BoolGrid]]:
-        """Advance ``steps`` generations; return cooperation series and snapshots."""
+        """Advance ``steps`` generations; return the cooperation series and snapshots.
+
+        With ``snapshots = k > 0`` the initial grid plus one grid every ``steps // k``
+        generations are returned (so up to ``k + 1`` grids).
+        """
         if steps < 1:
             raise ValueError("steps must be >= 1")
         if asynchronous and rng is None:
@@ -143,7 +147,8 @@ class SpatialPD:
         every = max(1, steps // snapshots) if snapshots else 0
         for k in range(1, steps + 1):
             if asynchronous:
-                assert rng is not None
+                if rng is None:  # pragma: no cover - guarded above
+                    raise ValueError("asynchronous update needs an rng")
                 self.step_async(rng)
             else:
                 self.step()

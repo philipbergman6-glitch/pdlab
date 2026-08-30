@@ -4,8 +4,13 @@ version = "0.1.0"
 description = "Prisoner's Dilemma laboratory: theory, tournaments, evolution, spatial games"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Philip Bergman" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
 dependencies = [
   "numpy>=1.26",
   "scipy>=1.11",
@@ -40,7 +45,7 @@ packages = ["src/pdlab"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --cov=pdlab --cov-report=term-missing --cov-report=xml"
+addopts = "-q"
 
 [tool.coverage.run]
 source = ["pdlab"]
@@ -68,7 +73,17 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 
-files = ["src/pdlab"]
+files = ["src/pdlab", "scripts", "tests"]
 [[tool.mypy.overrides]]
-module = ["scipy.*", "matplotlib.*", "sympy.*", "imageio.*"]
+module = ["scipy.*", "matplotlib.*", "sympy.*", "imageio.*", "axelrod.*", "hypothesis.*"]
 ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+disallow_untyped_calls = false
+disallow_any_generics = false
+warn_unused_ignores = false
+warn_return_any = false

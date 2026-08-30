@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
@@ -53,7 +54,7 @@ def thresholds(T: float = 5, R: float = 3, P: float = 1, S: float = 0) -> None:
     from pdlab.analytic import thresholds as _th
 
     th = _th(PayoffMatrix(T, R, P, S))
-    for k, v in th.__dict__.items():
+    for k, v in asdict(th).items():
         typer.echo(f"{k:>20s}: {v:.4f}")
     typer.echo(f"TFT can be SPE: {th.tft_is_spe_possible}")
 

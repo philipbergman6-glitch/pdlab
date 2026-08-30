@@ -1,6 +1,6 @@
 .PHONY: all sync test lint reproduce quick report app crosscheck clean
 
-all: sync reproduce app report
+all: sync test reproduce app report
 
 sync:
 	uv sync --extra dev
@@ -12,7 +12,7 @@ quick:
 	uv run pdlab reproduce --root . --quick --no-hero
 
 test:
-	uv run pytest
+	uv run pytest --cov=pdlab --cov-report=term-missing --cov-report=xml --cov-fail-under=90
 
 lint:
 	uv run ruff check src tests scripts && uv run ruff format --check src tests scripts && uv run mypy
@@ -26,5 +26,5 @@ report:
 crosscheck:  # needs an environment with `axelrod` installed, e.g. `uvx --with axelrod python`
 	python scripts/crosscheck_axelrod.py > results/crosscheck_axelrod.md
 
-clean:
-	rm -rf results figures/*.png figures/*.pdf figures/*.gif report/build
+clean:  # generated artefacts only; results/ is tracked and left alone
+	rm -rf figures/*.png figures/*.pdf figures/*.gif report/build app/index.html

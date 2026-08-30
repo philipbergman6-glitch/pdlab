@@ -100,12 +100,15 @@ def moran_process(
     w: float = 1.0,
     mutation: float = 0.0,
     stop_at_fixation: bool = True,
+    record: bool = True,
 ) -> MoranResult:
     """Frequency-dependent Moran process (Nowak 2006, ch. 6).
 
     Fitness f_i = 1 - w + w * pi_i, where pi_i is i's mean payoff against the
     rest of the population (self-interaction excluded).  One birth-death event
     per step; offspring mutate to a uniformly random strategy with prob ``mutation``.
+    With ``record=False`` only the initial and final counts are kept (fast fixation
+    experiments).
     """
     A = _check_matrix(A)
     n = A.shape[0]
@@ -114,8 +117,10 @@ def moran_process(
         raise ValueError("counts0 must be non-negative with population >= 2")
     if not 0 <= w <= 1 or not 0 <= mutation <= 1 or steps < 1:
         raise ValueError("bad Moran parameters")
+    if stop_at_fixation and mutation > 0:
+        raise ValueError("stop_at_fixation is meaningless with mutation > 0; pass False")
     N = int(counts.sum())
-    hist = np.empty((steps + 1, n), dtype=np.int64)
+    hist = np.empty((steps + 1, n) if record else (2, n), dtype=np.int64)
     hist[0] = counts
     fixated: int | None = None
     for s in range(1, steps + 1):
@@ -136,11 +141,15 @@ def moran_process(
         counts = counts.copy()
         counts[victim] -= 1
         counts[parent] += 1
-        hist[s] = counts
-        if stop_at_fixation and mutation == 0 and np.max(counts) == N:
+        if record:
+            hist[s] = counts
+        if stop_at_fixation and np.max(counts) == N:
             fixated = int(np.argmax(counts))
-            hist = hist[: s + 1]
+            if record:
+                hist = hist[: s + 1]
             break
+    if not record:
+        hist[1] = counts
     return MoranResult(hist, fixated)
 
 
@@ -152,15 +161,22 @@ def fixation_probability(A: FArr, mutant: int, resident: int, N: int, w: float =
     A = _check_matrix(A)
     if N < 2:
         raise ValueError("N must be >= 2")
+    n = A.shape[0]
+    if not (0 <= mutant < n and 0 <= resident < n) or mutant == resident:
+        raise ValueError(f"mutant and resident must be distinct indices in [0, {n})")
+    if not 0 <= w <= 1:
+        raise ValueError("w must be in [0, 1]")
     a, b = A[mutant, mutant], A[mutant, resident]
     c, d = A[resident, mutant], A[resident, resident]
-    total = 1.0
-    prod = 1.0
+    log_terms = [0.0]  # log of the k = 0 term (= 1)
+    log_prod = 0.0
     for j in range(1, N):
         f_j = 1 - w + w * (a * (j - 1) + b * (N - j)) / (N - 1)
         g_j = 1 - w + w * (c * j + d * (N - j - 1)) / (N - 1)
         if f_j <= 0 or g_j <= 0:
             raise ValueError("non-positive fitness in fixation formula")
-        prod *= g_j / f_j
-        total += prod
+        log_prod += float(np.log(g_j) - np.log(f_j))
+        log_terms.append(log_prod)
+    m = max(log_terms)
+    total = float(np.exp(m) * np.sum(np.exp(np.array(log_terms) - m)))
     return 1.0 / total

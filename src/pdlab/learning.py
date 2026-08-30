@@ -43,7 +43,6 @@ class QLearner(Strategy):
         self.Q = np.full((5, 2), optimistic, dtype=float)
         self.state = _STATE_START
         self.last_action = 0
-        self._rng_cache: np.random.Generator | None = None
 
     def _reset_state(self) -> None:
         self.state = _STATE_START
@@ -52,7 +51,6 @@ class QLearner(Strategy):
             self.Q[:] = self.optimistic
 
     def _decide(self, rng: np.random.Generator) -> Move:
-        self._rng_cache = rng
         q = self.Q[self.state]
         if rng.random() < self.explore or q[0] == q[1]:
             a = int(rng.integers(0, 2))
@@ -73,7 +71,8 @@ class QLearner(Strategy):
 
     def greedy_policy(self) -> tuple[float, float, float, float]:
         """Deterministic memory-one vector implied by the current Q-table."""
-        return tuple(1.0 if self.Q[s, 0] >= self.Q[s, 1] else 0.0 for s in range(4))  # type: ignore[return-value]
+        q = [1.0 if self.Q[s, 0] >= self.Q[s, 1] else 0.0 for s in range(4)]
+        return (q[0], q[1], q[2], q[3])
 
     def clone(self) -> Strategy:
         return QLearner(
