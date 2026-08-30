@@ -1,0 +1,33 @@
+# Introduction
+
+## Why the Prisoner's Dilemma
+
+Two suspects are arrested. Held in separate cells, each is offered the same deal: testify against your accomplice and go free while he serves ten years; stay silent and, if he testifies, you serve the ten years yourself. If both testify, both serve five years; if both stay silent, the prosecutor can only make a minor charge stick and both serve one year. Whatever the other does, testifying is strictly better --- and so both testify, and both serve five years, when both could have served one.
+
+This narrative dressing is due to Albert W. Tucker, who used it in 1950 to make an abstract two-by-two game intelligible to a psychology audience at Stanford. The game itself was older by a few months: Merrill Flood and Melvin Dresher had constructed it at the RAND Corporation in January 1950, and had run what is probably the first laboratory experiment on it --- a hundred-round repetition between two colleagues, whose behaviour stubbornly refused to match the backward-induction prediction [@flood1958]. Flood's report already contains the two observations that have organised the field ever since: individually rational play destroys jointly available value, and *repetition changes the answer*.
+
+The reason the game has not been retired in the seventy-five years since is that its structure recurs wherever the private cost of a cooperative act is borne by the actor while its benefit accrues to someone else. An arms race is a Prisoner's Dilemma in which cooperation is disarmament and the temptation is a first-strike advantage. Two firms in a duopoly face one in which cooperation is the monopoly price and the temptation is to undercut. Greenhouse-gas abatement is a many-player version in which every nation prefers that others abate; the free-rider incentive is exactly the dominance argument above. In evolutionary biology, the dilemma is the standard model for the evolution of altruism: a cooperative act that costs the donor $c$ and delivers $b > c$ to the recipient is a Prisoner's Dilemma in which natural selection, acting on individual fitness, favours defection [@axelrodhamilton1981]. That cooperation nonetheless abounds --- in cleaner fish, in vampire bats, in human institutions --- is the puzzle that the theory in this report exists to resolve.
+
+The resolution offered by game theory is not that the dominance argument is wrong. It is that the one-shot game is the wrong model. Once the same two players expect to meet again, a defection today can be paid for tomorrow, and cooperation can be sustained as an equilibrium of the *repeated* game. Robert Axelrod's computer tournaments [@axelrod1984] gave this abstraction an empirical face: the winner of both tournaments, submitted by Anatol Rapoport, was TIT FOR TAT --- cooperate first, then copy the opponent's last move --- a strategy of four lines whose success Axelrod attributed to being nice, retaliatory, forgiving and clear.
+
+## Roadmap
+
+Chapter 2 sets up the one-shot game and proves the classical facts: strict dominance, uniqueness of the Nash equilibrium among all mixed profiles, and an exact characterisation of which pure profiles are Pareto-efficient. It also fixes the two parametrisations used throughout: the donation game $(b,c)$ and the weak dilemma of Nowak and May.
+
+Chapter 3 treats the finitely repeated game. The backward-induction argument is given in full, including the fact --- often asserted and rarely proved --- that unrelenting defection is the unique subgame-perfect equilibrium *and* the unique on-path Nash outcome for every horizon $n$.
+
+Chapter 4 is the analytical core: the infinitely repeated game with discount factor $\delta$. We prove that Grim Trigger sustains cooperation exactly when $\delta \ge (T-R)/(T-P)$, and derive Axelrod's collective-stability threshold for TIT FOR TAT by solving a two-state discounted dynamic program, which turns "consider all deviations'' into a finite computation. We then show that (TIT FOR TAT, TIT FOR TAT) is subgame perfect only on a knife-edge set of payoffs --- never for Axelrod's $(5,3,1,0)$ --- and close with the Nash and subgame-perfect folk theorems.
+
+Chapter 5 moves from rationality to selection: the replicator equation, evolutionary stability, a complete phase portrait of the three-strategy system $\{\mathrm{ALLC}, \mathrm{ALLD}, \mathrm{TFT}\}$ with symbolically computed Jacobian spectra, the Moran process and the $1/3$ law, and the Nowak--May spatial lattice, whose famous thresholds in $b$ we derive from explicit neighbourhood score counts.
+
+Later chapters (numerical, empirical) report the computational work; this document contains the theory those chapters rest on.
+
+## Contributions
+
+The report has three layers.
+
+**Reproduced theory.** Chapters 2--5 restate the classical results with complete proofs and uniform notation. Where the literature is content with a sketch --- the "only two deviations matter'' step in Axelrod's Proposition 2, the failure of subgame perfection for TIT FOR TAT, the lattice thresholds $b = 9/8, 7/5, 8/5, 9/5$ in the Nowak--May model --- we give the argument in full.
+
+**A numerical laboratory.** All quantitative claims are backed by `pdlab`, a typed, tested Python package: `pdlab.game` for the payoff algebra, `pdlab.analytic` for the symbolic thresholds and replicator spectra (computed with `sympy`, not transcribed from the literature), `pdlab.markov` for exact memory-one analysis, and modules for tournaments, evolution, spatial dynamics and reinforcement learning. Every threshold quoted in this report is regenerated from source at build time.
+
+**Original contribution.** Two pieces of work go beyond reproduction. First, an exact treatment of *implementation noise*: with trembling-hand error $\varepsilon$, a pair of memory-one strategies $(p_{CC}, p_{CD}, p_{DC}, p_{DD})$ induces an irreducible Markov chain on the four states $CC, CD, DC, DD$, so long-run payoffs are stationary expectations computable in closed form rather than estimated by simulation. This lets us map the robustness of the entire memory-one cube as a function of $\varepsilon$ --- and to show precisely where the simulation-based folklore about noisy tournaments is quantitatively wrong. Second, we pit zero-determinant *extortionate* strategies [@pressdyson2012] against an adaptive $Q$-learning opponent [@watkinsdayan1992], testing Press and Dyson's claim that an evolutionary opponent can be steered: extortion is a Nash-like threat only against an agent whose learning dynamics accept the offered linear relation, and we characterise when the learner instead walks to mutual defection.

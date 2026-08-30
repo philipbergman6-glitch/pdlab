@@ -1,0 +1,17 @@
+---
+title: "The Prisoner's Dilemma: Theory, Tournaments, Evolution, and Noise"
+author: "Philip Bergman"
+date: "2026"
+abstract: |
+  TODO-ABSTRACT
+numbersections: true
+link-citations: true
+colorlinks: true
+fontsize: 11pt
+geometry:
+  - margin=1in
+bibliography: references.bib
+lang: en-GB
+toc: true
+toc-depth: 2
+---

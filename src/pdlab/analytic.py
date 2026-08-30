@@ -293,3 +293,42 @@ def is_neutrally_stable(A: NDArray[np.float64], i: int, tol: float = 1e-12) -> b
             continue
         return False
     return True
+
+
+# --------------------------------------------------------------------------
+# implementation noise: exact stationary payoffs as functions of epsilon
+# --------------------------------------------------------------------------
+eps = sp.symbols("varepsilon", positive=True)
+"""Symbolic implementation-error rate."""
+
+
+def stationary_payoffs_symbolic(
+    p: tuple[float | sp.Expr, ...], q: tuple[float | sp.Expr, ...]
+) -> tuple[sp.Expr, sp.Expr]:
+    """Exact (s_X, s_Y) of two memory-one strategies under noise ``eps`` (symbolic).
+
+    Requires the noisy chain to be irreducible, which holds for every ``eps > 0``.
+    """
+    if len(p) != 4 or len(q) != 4:
+        raise ValueError("p and q must have four entries")
+    px = [(1 - 2 * eps) * sp.nsimplify(v) + eps for v in p]
+    qq = [sp.nsimplify(v) for v in q]
+    qy = [(1 - 2 * eps) * v + eps for v in (qq[0], qq[2], qq[1], qq[3])]
+    M = sp.zeros(4, 4)
+    for s in range(4):
+        a, b = px[s], qy[s]
+        M[s, 0], M[s, 1], M[s, 2], M[s, 3] = a * b, a * (1 - b), (1 - a) * b, (1 - a) * (1 - b)
+    v = sp.Matrix(sp.symbols("v0:4"))
+    eqs = list(M.T * v - v)[:3] + [sum(v) - 1]
+    sol = sp.solve(eqs, list(v), dict=True)
+    if len(sol) != 1:
+        raise ValueError("stationary distribution not unique")
+    vv = sp.Matrix([sp.simplify(sol[0][vi]) for vi in v])
+    sx = sp.Matrix([R, S, T, P])
+    sy = sp.Matrix([R, T, S, P])
+    return sp.simplify((vv.T * sx)[0]), sp.simplify((vv.T * sy)[0])
+
+
+def self_play_noise_symbolic(p: tuple[float | sp.Expr, ...]) -> sp.Expr:
+    """Exact self-play payoff of a memory-one strategy as a function of ``eps``."""
+    return stationary_payoffs_symbolic(p, p)[0]

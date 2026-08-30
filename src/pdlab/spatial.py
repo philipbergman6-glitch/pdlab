@@ -90,21 +90,39 @@ class SpatialPD:
             best_strat = np.where(better, g, best_strat)
         self.grid = best_strat
 
+    def _local_score(self, i: int, j: int) -> float:
+        """Score of site (i, j) computed from its 3x3 window only."""
+        n, m = self.grid.shape
+        count = 1.0 if (self.self_interaction and self.grid[i, j]) else 0.0
+        for di, dj in _OFFSETS:
+            ii, jj = i + di, j + dj
+            if self.periodic:
+                ii, jj = ii % n, jj % m
+            elif not (0 <= ii < n and 0 <= jj < m):
+                continue
+            if self.grid[ii, jj]:
+                count += 1.0
+        return count if self.grid[i, j] else self.b * count
+
     def step_async(self, rng: np.random.Generator) -> None:
-        """One sweep of L*L random single-site updates (Huberman & Glance 1993)."""
+        """One sweep of L*L random single-site updates (Huberman & Glance 1993).
+
+        Each chosen site compares its own current score with those of its 8
+        neighbours (all computed from the *current* grid) and copies the best.
+        """
         n, m = self.grid.shape
         for _ in range(n * m):
             i, j = int(rng.integers(n)), int(rng.integers(m))
-            sc = self.scores()
-            best, strat = sc[i, j], self.grid[i, j]
+            best, strat = self._local_score(i, j), self.grid[i, j]
             for di, dj in _OFFSETS:
                 ii, jj = i + di, j + dj
                 if self.periodic:
                     ii, jj = ii % n, jj % m
                 elif not (0 <= ii < n and 0 <= jj < m):
                     continue
-                if sc[ii, jj] > best:
-                    best, strat = sc[ii, jj], self.grid[ii, jj]
+                sc = self._local_score(ii, jj)
+                if sc > best:
+                    best, strat = sc, self.grid[ii, jj]
             self.grid[i, j] = strat
 
     def run(

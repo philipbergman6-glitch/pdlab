@@ -2,7 +2,7 @@
 <title>Glossary — Prisoner's Dilemma</title><link rel="stylesheet" href="../assets/course.css"></head>
 <body><main>
 <h1>Glossary</h1><p class="subtitle">Canonical terms for this course. Every lesson uses exactly these definitions.</p>
-<p class="meta">Reference · grows with each lesson · <a href="../lessons/0001-one-shot-prisoners-dilemma.html">Lesson 1</a></p>
+<p class="meta">Reference · grows with each lesson · <a href="../lessons/0001-one-shot-prisoners-dilemma.html">Lesson 1</a> · <a href="../lessons/0002-finitely-repeated-pd.html">Lesson 2</a></p>
 
 <h2>One-shot game (Lesson 1)</h2>
 <dl>
@@ -18,8 +18,17 @@
 <dt><b>Prisoner's Dilemma</b></dt><dd>The 2×2 symmetric game defined by the two inequalities above. Its unique NE (D,D) is Pareto-dominated by (C,C).</dd>
 </dl>
 
-<h2>Repeated games (Lessons 2–4)</h2>
-<p class="side">Populated as lessons are completed.</p>
+<h2 id="repeated">Repeated games (Lessons 2–4)</h2>
+<dl>
+<dt><b>Stage game</b></dt><dd>The one-shot game played each round (here: the PD).</dd>
+<dt><b>History</b> <span class="math">h<sub>t</sub></span></dt><dd>Sequence of action profiles in rounds 1…<span class="math">t−1</span>.</dd>
+<dt><b>Strategy (repeated game)</b></dt><dd>A map from every history to an action. Tit-for-Tat, Grim Trigger, ALLD are strategies; "cooperate" is not.</dd>
+<dt><b>Subgame</b></dt><dd>The game beginning after any history.</dd>
+<dt><b>Subgame-perfect equilibrium (SPE)</b></dt><dd>A strategy profile inducing a NE in every subgame, on- and off-path. Rules out non-credible threats.</dd>
+<dt><b>Backward induction</b></dt><dd>Solve the last subgames, replace by equilibrium payoffs, step back. Yields SPE in finite games.</dd>
+<dt><b>Unraveling theorem</b></dt><dd>Finitely repeated PD: unique SPE is all-D at every history. Needs only a unique stage NE.</dd>
+<dt><b>Grim-until-<i>k</i></b></dt><dd>Teaching strategy: cooperate until round <i>k</i> or opponent's first defection, then defect forever. Best response to Grim-until-<i>m</i> is <i>k = m−1</i>.</dd>
+</dl>
 
 <h2>Evolutionary dynamics (Lessons 6–7)</h2>
 <p class="side">Populated as lessons are completed.</p>

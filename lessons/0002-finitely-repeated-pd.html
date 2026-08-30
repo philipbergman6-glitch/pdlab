@@ -1,0 +1,96 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 2 — The Finitely Repeated Prisoner's Dilemma</title>
+<link rel="stylesheet" href="../assets/course.css"><script src="../assets/quiz.js"></script></head>
+<body><main>
+<h1>The Finitely Repeated Prisoner's Dilemma</h1>
+<p class="subtitle">Lesson 2 · Repetition should rescue cooperation. With a known last round, it doesn't — and the proof is one induction.</p>
+<p class="meta">~15 min · Prerequisite: <a href="0001-one-shot-prisoners-dilemma.html">Lesson 1</a> · Reference: <a href="../reference/glossary.html#repeated">Glossary</a> · Mission: backward-induction proof that defection unravels.</p>
+
+<details class="recall"><summary>Warm-up from Lesson 1 (answer before opening): which two inequalities alone give strict dominance of D, and which one makes it a dilemma?</summary>
+<p>Dominance: <span class="math">T &gt; R</span> and <span class="math">P &gt; S</span>. Dilemma: <span class="math">R &gt; P</span>, so (C,C) Pareto-dominates the unique NE (D,D).</p></details>
+
+<h2>1. What changes when the game repeats</h2>
+<p>Play the stage game <span class="math">N</span> times, observing all past actions. Payoff is the sum (discounting comes in Lesson 3). Three new objects:</p>
+<div class="def"><b>History</b> <span class="math">h<sub>t</sub></span>: the sequence of action profiles in rounds 1…<span class="math">t−1</span>.<br>
+<b>Strategy</b>: a function from <em>every</em> possible history to an action. Not "a plan for the game" but a contingent plan for all <span class="math">4<sup>t−1</sup></span> histories at each <span class="math">t</span>. "Tit-for-Tat" is a strategy; "cooperate" is not.<br>
+<b>Subgame</b>: the game that starts after any history <span class="math">h<sub>t</sub></span>. A repeated game has one subgame per history.</div>
+<p>Nash equilibrium still applies to full strategies, but it has a loophole: a strategy can prescribe absurd behaviour at histories that are never reached in equilibrium, and NE never checks those. That's what the next concept removes
+<a href="https://ocw.mit.edu/courses/14-12-economic-applications-of-game-theory-fall-2025/lists/lecture-notes/">[MIT 14.12 notes, SPNE]</a>.</p>
+
+<h2>2. Subgame-perfect equilibrium</h2>
+<div class="def"><b>Definition.</b> A strategy profile is a <b>subgame-perfect equilibrium (SPE)</b> if it induces a Nash equilibrium in <em>every</em> subgame — including subgames off the equilibrium path
+<a href="https://books.osborne.economics.utoronto.ca/">[Osborne &amp; Rubinstein, Def. 97.2]</a>.</div>
+<p>Every SPE is a NE; the converse fails. SPE is the standard solution concept for repeated games because it rules out threats nobody would carry out ("non-credible threats"). In finite games you find SPE by <b>backward induction</b>: solve the last subgames first, replace them by their equilibrium payoffs, step back.</p>
+
+<h2>3. Theorem: defection unravels</h2>
+<p><b>Theorem.</b> In the <span class="math">N</span>-round repeated PD (any finite <span class="math">N</span>), the unique SPE is: every player defects after every history.</p>
+<p><i>Proof</i> (backward induction on the round). <b>Round N.</b> Whatever <span class="math">h<sub>N</sub></span> is, the subgame is the one-shot PD: nothing later can reward or punish. By Lesson 1, D strictly dominates, so (D,D) is the unique NE of every round-N subgame.
+<b>Round N−1.</b> Both players know round N yields (D,D) regardless of what they do now, so the continuation payoff <span class="math">P</span> is a constant added to every cell. Adding a constant doesn't change best responses: round N−1 is again a one-shot PD, unique NE (D,D).
+<b>Induction.</b> Suppose all rounds <span class="math">&gt; t</span> are (D,D) in every subgame. Then the continuation from round <span class="math">t</span> is a constant <span class="math">(N−t)P</span>, so round <span class="math">t</span> is a one-shot PD and (D,D) is its unique NE. Hence all-D at every history. ∎</p>
+<p class="side">Stronger fact, same idea: even the weaker NE concept gives all-D <em>on the equilibrium path</em> (off-path threats can be anything). The key ingredient is that the stage game has a <em>unique</em> NE. Stage games with multiple NE can support cooperation in finitely repeated play by rewarding/punishing in the last rounds
+<a href="https://www.jstor.org/stable/1911307">[Fudenberg &amp; Maskin 1986]</a>.</p>
+
+<h2>4. Feel the unraveling</h2>
+<p>Restrict to strategies of the form <b>Grim-until-<i>k</i></b>: cooperate until round <span class="math">k</span> or until the opponent first defects, whichever comes first; then defect forever. Against an opponent using Grim-until-<span class="math">m</span>, your payoff from Grim-until-<span class="math">k</span> is</p>
+<pre>k &lt; m :  (k−1)R + T + (N−k)P        (you strike first; they retaliate from k+1)
+k = m :  (m−1)R + (N−m+1)P
+k &gt; m :  (m−1)R + S + (N−m)P        (they strike first)</pre>
+<p>Check: <span class="math">u(m−1) − u(m) = T − R &gt; 0</span> and <span class="math">u(m−2) − u(m−1) = P − R &lt; 0</span>. So the best response to <span class="math">m</span> is <span class="math">k = m−1</span>: defect exactly one round before they would. Iterate and it collapses to round 1.</p>
+<div class="win"><h3>Interactive — best-response ladder</h3>
+<p>Payoffs T,R,P,S = 5,3,1,0. Pick <span class="math">N</span> and the opponent's <span class="math">m</span>. Move your <span class="math">k</span> until the payoff is maximal, then press "Opponent adopts my k" and repeat. Count how many steps until you both defect from round 1.</p>
+<div class="editor">
+ <label>Rounds N</label><input id="N" type="number" min="2" max="12" value="6">
+ <label>Opponent's m (defects from round m)</label><input id="m" type="number" min="1" value="6">
+ <label>Your k</label><input id="k" type="number" min="1" value="6">
+</div>
+<table class="payoff"><thead><tr><th></th><th>Your payoff</th><th>Opponent's payoff</th></tr></thead>
+<tbody><tr><th>Grim-until-k vs Grim-until-m</th><td id="uy"></td><td id="uo"></td></tr></tbody></table>
+<p id="br" class="verdict"></p>
+<button id="adopt" style="font:inherit;padding:.4rem .8rem">Opponent adopts my k</button>
+<p id="log" class="fb"></p>
+</div>
+
+<h2>5. But people cooperate…</h2>
+<p>Experiments with fixed-horizon PDs show substantial cooperation that decays toward the end — end-game effects exist but not full unraveling. The standard theoretical repairs: (a) uncertainty about when the game ends (Lesson 3 — this is what discounting really models), (b) a small chance the opponent is a "committed" reciprocator, which makes mimicking cooperation rational for most of a long game (Kreps, Milgrom, Roberts &amp; Wilson 1982), (c) bounded rationality. For your report, (a) is the one you'll build on; mention (b) with a citation
+<a href="https://plato.stanford.edu/entries/prisoner-dilemma/#FinIte">[SEP, "Finite iteration"]</a>.</p>
+
+<h2>6. Retrieval check</h2>
+<div class="quiz" id="quiz"></div>
+
+<h2>Primary source</h2>
+<p>Ben Polak, <a href="https://oyc.yale.edu/economics/econ-159">Open Yale ECON 159</a>, lectures on backward induction and repeated games (transcripts available) for intuition; then the SPNE chapter of the <a href="https://ocw.mit.edu/courses/14-12-economic-applications-of-game-theory-fall-2025/lists/lecture-notes/">MIT 14.12 notes</a> for the formal version you'll cite.</p>
+<div class="ask">Ask me: why constants don't change best responses, what "off-path" means concretely, or how uniqueness of the stage NE is used. I'm the teacher for this course.</div>
+<nav class="lessons"><a href="0001-one-shot-prisoners-dilemma.html">← Lesson 1</a><span>Next: Lesson 3 — Infinite repetition, discounting, Grim Trigger δ* →</span></nav>
+</main>
+<script>
+const T=5,R=3,P=1,S=0;
+function u(k,m,N){ if(k<m) return (k-1)*R+T+(N-k)*P; if(k===m) return (m-1)*R+(N-m+1)*P; return (m-1)*R+S+(N-m)*P; }
+const $=id=>document.getElementById(id); let steps=0;
+function draw(){
+  let N=+$('N').value, m=Math.min(+$('m').value,N), k=Math.min(+$('k').value,N); $('m').value=m;$('k').value=k;
+  $('m').max=N;$('k').max=N;
+  $('uy').textContent=u(k,m,N); $('uo').textContent=u(m,k,N);
+  let best=1,bv=-1e9; for(let j=1;j<=N;j++){const v=u(j,m,N); if(v>bv){bv=v;best=j;}}
+  const ok=k===best; $('br').textContent=ok?`k=${k} is your best response to m=${m}.`:`Not optimal yet — some k does better against m=${m}.`;
+  $('br').style.color=ok?'var(--ok)':'var(--bad)';
+  $('adopt').disabled=!ok;
+}
+['N','m','k'].forEach(id=>$(id).oninput=draw);
+$('adopt').onclick=()=>{ steps++; $('m').value=$('k').value; draw();
+  const m=+$('m').value; $('log').textContent= m===1?`After ${steps} adoption step(s) the opponent defects from round 1. Now find your best response to that.`:`Step ${steps}: opponent now defects from round ${m}. Find your new best k.`; };
+draw();
+renderQuiz($('quiz'),[
+ {stem:'What does subgame perfection add to Nash equilibrium?',
+  options:['Optimality must hold in every single subgame','Players must be perfectly symmetric throughout play','Strategies must be independent of past histories','Payoffs must be summed without any discounting'],
+  answer:0, why:'SPE requires a NE in every subgame, including off-path ones — it kills non-credible threats.'},
+ {stem:'The inductive step works because the continuation payoff is…',
+  options:['A constant that leaves best responses unchanged','A bonus that makes cooperation strictly dominant','A penalty that only row players pay','A random variable with zero expected value'],
+  answer:0, why:'All later rounds are (D,D) at every history, so the continuation (N−t)P is the same in every cell; adding a constant preserves best responses.'},
+ {stem:'Which property of the stage game does the unraveling proof rely on?',
+  options:['It has a unique Nash equilibrium','It has a symmetric payoff matrix','It has exactly two available actions','It has strictly positive payoffs everywhere'],
+  answer:0, why:'With multiple stage NE, last-round play can reward earlier cooperation, and finite-horizon cooperation becomes possible.'},
+ {stem:'Against Grim-until-m, why is k = m−1 the best response?',
+  options:['Striking first gains T−R, striking earlier costs R−P','Striking first gains R−P, striking earlier costs T−R','Matching m gains T−S, striking earlier costs P−S','Matching m gains R−S, striking earlier costs T−P'],
+  answer:0, why:'u(m−1)−u(m)=T−R&gt;0 (you exploit once), u(m−2)−u(m−1)=P−R&lt;0 (you lose a round of R).'}
+]);
+</script></body></html>
