@@ -210,18 +210,33 @@ def tables(d: dict[str, Any]) -> dict[str, str]:
         ["initial $f_C$", "asymptotic $f_C$"],
         [[r["f0"], f"{r['coop_final']:.3f}"] for r in d["spatial"]["init_independence"]],
     )
-    # zd scatter named
+    # zd scatter named: exact at eps = 0, and what noise on both sides does to the ratio
+    P = d["payoffs"]["P"]
+
+    def ratio(sx: float, sy: float) -> str:
+        return f"{(sx - P) / (sy - P):.3f}" if abs(sy - P) > 1e-6 else "—"
+
     rows = [
         [
             s["opponent"],
             f"{s['s_Y']:.3f}",
             f"{s['s_X']:.3f}",
-            f"{(s['s_X'] - 1) / (s['s_Y'] - 1) if abs(s['s_Y'] - 1) > 1e-9 else float('nan'):.3f}",
+            ratio(s["s_X"], s["s_Y"]),
+            ratio(s["s_X_eps"], s["s_Y_eps"]),
         ]
         for s in d["zd"]["scatter"]
         if s["opponent"] != "random"
     ]
-    t["zd_named"] = md_table(["opponent", "$s_Y$", "$s_X$ (Extort-2)", "$(s_X-P)/(s_Y-P)$"], rows)
+    t["zd_named"] = md_table(
+        [
+            "opponent",
+            "$s_Y$",
+            "$s_X$ (Extort-2)",
+            "$(s_X-P)/(s_Y-P)$, $\\varepsilon=0$",
+            "same, $\\varepsilon=0.01$",
+        ],
+        rows,
+    )
     # learner
     rows = []
     for opp in ("EXTORT2", "ZDGTFT2", "TFT"):

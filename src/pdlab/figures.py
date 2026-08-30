@@ -557,10 +557,14 @@ def fig_zd(res: dict[str, Any], pm: PayoffMatrix, out: Path) -> list[Path]:
         zorder=5,
         label="named strategies",
     )
+    groups: dict[tuple[float, float], list[str]] = {}
     for s in nam:
+        key = (round(float(s["s_Y"]), 3), round(float(s["s_X"]), 3))
+        groups.setdefault(key, []).append(str(s["opponent"]))
+    for (sy, sx), labels in groups.items():
         ax.annotate(
-            s["opponent"],
-            (s["s_Y"], s["s_X"]),
+            ", ".join(labels),
+            (sy, sx),
             textcoords="offset points",
             xytext=(4, 3),
             fontsize=7,

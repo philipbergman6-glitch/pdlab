@@ -19,4 +19,7 @@ bibliography: references.bib
 lang: en-GB
 toc: true
 toc-depth: 2
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{tbp}
 ---
