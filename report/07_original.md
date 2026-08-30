@@ -60,8 +60,8 @@ $\varepsilon \to 0$ of the noisy payoff, $9/4$, is *not* the noiseless
 payoff $R = 3$. TFT self-play is discontinuous in the noise level. The
 generous strategies, by contrast, degrade linearly, with slopes that rank
 them: ALLC ($-1$), GTFT ($-3$), WSLS ($-5$), ZDGTFT-2 ($-8$) for
-Axelrod's payoffs. Table @tbl:noise lists the expansions and the exact
-values at two noise levels; Figure @fig:noise compares the exact curves
+Axelrod's payoffs. @tbl:noise lists the expansions and the exact
+values at two noise levels; @fig:noise compares the exact curves
 with simulated matches of {{scale.noise_sim_rounds}} rounds.
 
 {{table:noise_selfplay}}
@@ -97,7 +97,7 @@ the echo; with that bug CTFT fell to mid-table under noise and the generous
 strategies led. The test-suite now pins the correct standing dynamics.)
 This is the evolutionary counterpart of Proposition 7.1: selection under
 noise rewards error-correction first and generosity second
-(Figure @fig:evonoise).
+(@fig:evonoise).
 
 ![Time-averaged strategy frequencies in the Moran process at increasing noise.](../figures/evolution_noise.pdf){#fig:evonoise width=85%}
 
@@ -144,7 +144,7 @@ with a tabular Q-learner whose state is the last joint outcome
 ($\alpha = 0.05$, $\gamma = 0.9$, $\varepsilon$-greedy exploration decaying
 from $0.2$ by a factor $0.9997$ per round), playing {{scale.learner_rounds}}
 rounds against Extort-2, ZDGTFT-2 and TFT for {{scale.learner_seeds}} seeds
-each. Table @tbl:learner reports the mean payoffs over the final fifth of
+each. @tbl:learner reports the mean payoffs over the final fifth of
 each match.
 
 {{table:learner}}
@@ -172,7 +172,7 @@ falls into a suboptimal alternating pattern rather than into exploitation.
 Extortion wins every pairwise contest but, as the tournament of Chapter 6
 already showed, loses the field. Its evolutionary fate among memory-one
 strategies is decided by self-play: Extort-2 against itself earns only
-$P + 18\varepsilon + O(\varepsilon^2)$ (Table @tbl:noise), essentially
+$P + 18\varepsilon + O(\varepsilon^2)$ (@tbl:noise), essentially
 mutual defection, so it cannot hold a population it has conquered.
 Replicator dynamics among seven memory-one strategies with exact payoffs
 at $\varepsilon = 0.01$, and a Moran process with mutation on the same

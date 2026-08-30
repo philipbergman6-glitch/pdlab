@@ -412,25 +412,22 @@ def fig_moran(
     ax.set_xscale("symlog", linthresh=0.001)
     ax.set_xlabel(r"mutation rate $\mu$")
     ax.set_ylabel("time-averaged frequency")
-    ax.set_title(f"ALLC / ALLD / TFT, Moran N={mut['N']}, start all-TFT")
+    ax.set_title(f"Moran N={mut['N']}, from all-TFT")
     ax.legend(fontsize=8)
     ax = axes[1]
-    pick = [r for r in th["rows"] if r["mu"] in (0.01, 0.1)]
-    for r, ls in zip(pick, ("-", ":"), strict=False):
-        X = np.array(r["series_stride"])
+    pick = [r for r in th["rows"] if r["mu"] == 0.01]
+    if pick:
+        X = np.array(pick[0]["series_stride"])
+        w = max(1, len(X) // 100)
+        kern = np.ones(w) / w
+        tt = np.linspace(0, 1, len(X))
         for k, nm in enumerate(th["names"]):
-            ax.plot(
-                np.linspace(0, 1, len(X)),
-                X[:, k],
-                ls,
-                color=[COOP, DEFECT, ACCENT][k],
-                lw=1,
-                label=f"{nm} ($\\mu$={r['mu']})",
-            )
-    ax.set_xlabel("time (fraction of run)")
-    ax.set_ylabel("frequency")
-    ax.set_title("Mutation-driven cycles: ALLC drifts in, ALLD invades, TFT restores")
-    ax.legend(fontsize=7, ncol=2)
+            sm = np.convolve(X[:, k], kern, mode="same")
+            ax.plot(tt, sm, color=[COOP, DEFECT, ACCENT][k], lw=1.2, label=nm)
+        ax.set_xlabel("time (fraction of run)")
+        ax.set_ylabel("frequency (rolling mean)")
+        ax.set_title(r"$\mu=0.01$: ALLC drifts in, ALLD invades, TFT restores")
+        ax.legend(fontsize=8, ncol=3, loc="lower center", framealpha=0.9, frameon=True)
     paths += save(fig, out, "moran_three")
 
     names = evo_noise["names"]
@@ -493,7 +490,7 @@ def fig_spatial(res: dict[str, Any], out: Path) -> list[Path]:
     ax.set_xlabel("temptation $b$")
     ax.set_ylabel("asymptotic cooperator fraction $f_C$")
     ax.set_title("Spatial PD phase diagram (synchronous, 8 neighbours + self)")
-    ax.legend(loc="lower left")
+    ax.legend(loc="center left")
     paths = save(fig, out, "spatial_phase")
 
     snaps = res["kaleidoscope_snapshots"]

@@ -47,7 +47,7 @@ normalised mean totals $(1-\delta)\,\bar V$ with the exact values:
 {{table:thresholds_sim}}
 
 Every simulated value lies within two standard errors of the exact one, and
-the crossing points of the curves in Figure @fig:thresholds fall at the
+the crossing points of the curves in @fig:thresholds fall at the
 predicted thresholds. Note the qualitative content: the alternating deviation
 is the *binding* one for TFT, which is why TFT needs a more patient player
 ($\delta\ge 2/3$) than Grim Trigger ($\delta \ge 1/2$).
@@ -68,7 +68,7 @@ the remainder of the report.
 ## An Axelrod-style tournament
 
 We ran a round-robin among {{tournament.payoff_matrix.names|len}} strategies
-(the fifteen classical strategies of Table @tbl:strategies plus the two zero-determinant
+(the fifteen classical strategies of @tbl:strategies plus the two zero-determinant
 strategies and a Q-learning agent), every strategy also playing a copy of
 itself, exactly as in Axelrod's tournaments. The same tournament was then
 repeated with implementation noise $\varepsilon \in \{0, 0.01, 0.05, 0.1\}$:
@@ -146,7 +146,7 @@ $$A=\begin{pmatrix} {{replicator.A[0][0]|.2f}} & {{replicator.A[0][1]|.2f}} & {{
 and Theorem 5.3 predicts the unstable fixed point on the ALLD–TFT edge at
 $x^*_{\mathrm{TFT}} = {{replicator.x_star|.4f}} = 1/17$. Integrating the replicator
 equation (`scipy.integrate.solve_ivp`, relative tolerance $10^{-9}$) from 27
-initial conditions confirms the bistable picture of Figure @fig:simplex:
+initial conditions confirms the bistable picture of @fig:simplex:
 populations that start with fewer than $x^*$ reciprocators converge to
 all-ALLD; populations above the threshold eliminate ALLD and drift to a
 point on the ALLC–TFT edge that depends on the initial condition (the edge
@@ -163,7 +163,7 @@ Linearisation predicts that near the ALLD vertex the TFT frequency decays as
 $e^{\lambda t}$ with $\lambda = A_{\mathrm{TFT},\mathrm{ALLD}}-A_{\mathrm{ALLD},\mathrm{ALLD}} = (1-\delta)(S-P) = {{replicator.convergence.predicted_rate|.3f}}$.
 A least-squares fit of $\log x_{\mathrm{TFT}}(t)$ on the numerical trajectory
 started at $x_{\mathrm{TFT}}=x^*/2$ gives a slope of
-{{replicator.convergence.fitted_rate|.4f}} (Figure @fig:conv): convergence is
+{{replicator.convergence.fitted_rate|.4f}} (@fig:conv): convergence is
 exponential, and the rate is set by the *discounted* gap between the
 sucker's and the punishment payoff. Because $(1-\delta)$ multiplies the
 rate, a more patient population (larger $\delta$) loses its reciprocators
@@ -204,7 +204,7 @@ an ALLD mutant invades (the TFT share has fallen below the threshold), the
 population crashes towards ALLD, and it is rescued only when a TFT lineage
 reaches the threshold $x^*$ by drift. The result is the
 ALLC$\to$ALLD$\to$TFT cycle of Nowak and Sigmund [-@nowaksigmund1992; @nowak2006book, ch. 5]
-(Figure @fig:three). Already at $\mu = 0.001$ (one birth in a thousand) the
+(@fig:three). Already at $\mu = 0.001$ (one birth in a thousand) the
 population spends {{moran_mutation.three.rows[1].frac_time_alld_majority|.0%}}
 of its time with an ALLD majority and the cooperation rate has fallen from 1
 to {{moran_mutation.three.rows[1].coop_rate|.2f}}; at $\mu = 0.01$ it is
@@ -238,8 +238,8 @@ mutants*, not of the equilibrium itself.
 `pdlab.spatial` implements the weak dilemma on a square lattice with eight
 neighbours, self-interaction, synchronous updating and periodic boundaries.
 Sweeping $b$ from 1.05 to 1.99 from random 90% cooperator initial
-conditions gives the phase diagram of Figure @fig:phase (raw values in
-Table @tbl:phase). The cooperator fraction is a staircase in $b$, because the
+conditions gives the phase diagram of @fig:phase (raw values in
+@tbl:phase). The cooperator fraction is a staircase in $b$, because the
 outcome of every local contest depends only on the comparison of integer
 multiples of $b$ against integers; the steps occur at the rational values
 derived in Chapter 5.
@@ -250,7 +250,7 @@ For $1.8 < b < 2$ our lattices settle into the "spatial chaos" regime with
 $f_C = {{spatial.coop_1p8_2|.3f}}$ averaged over all $b$ in that interval and over seeds,
 against the published value of $0.318$ [@nowakmay1992]. The
 1% discrepancy is within the run-to-run fluctuation of $f_C$ (compare the
-time series of Figure @fig:series), and the value is independent of the
+time series of @fig:series), and the value is independent of the
 initial cooperator fraction, as the authors reported:
 
 {{table:spatial_init}}
@@ -258,7 +258,7 @@ initial cooperator fraction, as the authors reported:
 ![Cooperator fraction over time for $b=1.9$; the dashed line is 0.318.](../figures/spatial_series.pdf){#fig:series width=65%}
 
 Starting from a single defector in a sea of cooperators with fixed
-boundaries reproduces Nowak and May's kaleidoscope (Figure @fig:kal): the
+boundaries reproduces Nowak and May's kaleidoscope (@fig:kal): the
 defector cluster grows, cooperators re-invade along the diagonals where
 they touch enough cooperators to out-score the defectors, and the
 symmetric initial condition is preserved forever by the deterministic rule.
@@ -274,7 +274,7 @@ $b = 1.9$ destroys cooperation almost completely: after
 {{scale.async_steps}} sweeps the cooperator fraction is
 {{spatial.sync_vs_async.async[-1]|.3f}} under asynchronous updating against
 {{spatial.sync_vs_async.sync[-1]|.3f}} under synchronous updating from the
-same initial lattice (Figure @fig:async). Spatial cooperation in the weak
+same initial lattice (@fig:async). Spatial cooperation in the weak
 dilemma at large $b$ is therefore a property of the *joint* choice of
 payoffs and update rule; the smaller-$b$ steps of the phase diagram
 survive asynchrony (Nowak, Bonhoeffer and May [-@nowakbonhoeffermay1994] give the fuller picture).
@@ -283,4 +283,4 @@ survive asynchrony (Nowak, Bonhoeffer and May [-@nowakbonhoeffermay1994] give th
 
 {{table:spatial_phase}}
 
-Table: Phase-diagram data behind Figure @fig:phase. {#tbl:phase}
+Table: Phase-diagram data behind @fig:phase. {#tbl:phase}
