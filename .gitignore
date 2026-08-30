@@ -13,3 +13,4 @@ report/build/*
 !report/build/prisoners_dilemma_report.pdf
 *.egg-info/
 dist/
+.DS_Store

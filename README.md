@@ -34,7 +34,7 @@ uv run pdlab reproduce       # ~2 min: results/canonical.json, 20 figures, READM
 make report                  # pandoc + tectonic → report/build/prisoners_dilemma_report.pdf
 ```
 
-`make all` does all three. `make test` runs the ~350-test suite (99 % branch coverage, property-based tests with Hypothesis; a test asserts that every number in this README matches `results/canonical.json`); `make lint` runs ruff and strict mypy. The app is rebuilt from the canonical results with `uv run python scripts/build_app.py`; open `app/index.html` by double-clicking.
+`make all` does all three. `make test` runs the ~350-test suite (99 % branch coverage, property-based tests with Hypothesis; a test asserts that every number in this README matches `results/canonical.json`); `make lint` runs ruff and strict mypy. The app is rebuilt from the canonical results with `uv run python scripts/build_app.py`; open `app/index.html` by double-clicking. It is a scroll-driven live surface: the page ground is the 99 × 99 Nowak–May lattice computed in the page, and scrolling advances its generation (quiet for the first half, then 6 → 130 across the lattice bench); the finite-horizon bench unravels 200 rounds under the wheel, the noise bench sweeps ε through the exact 4 × 4 Markov chain, and the page ends in a `pdlab>` prompt that computes thresholds, matches, stationary payoffs and lattices on demand. The scroll engine is the scrollcraft runtime (inlined verbatim, unmodified); the build brief and verification shots live under `scrollcraft/builds/pdlab-surface/`.
 
 Other entry points: `uv run pdlab tournament --noise 0.05`, `uv run pdlab thresholds --T 5 --R 3 --P 1 --S 0`, `uv run pdlab play --me WSLS --opponent EXTORT2 --rounds 30`.
 
