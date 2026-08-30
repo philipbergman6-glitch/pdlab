@@ -47,8 +47,11 @@ def build(payload_path: Path, template_path: Path, out_path: Path) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Build the single-file pdlab app.")
-    ap.add_argument("--payload", default=str(ROOT / "results" / "app_payload.json"),
-                    help="path to app_payload.json (default: results/app_payload.json)")
+    ap.add_argument(
+        "--payload",
+        default=str(ROOT / "results" / "app_payload.json"),
+        help="path to app_payload.json (default: results/app_payload.json)",
+    )
     ap.add_argument("--template", default=str(ROOT / "app" / "template.html"))
     ap.add_argument("--out", default=str(ROOT / "app" / "index.html"))
     args = ap.parse_args(argv)

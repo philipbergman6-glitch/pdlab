@@ -571,6 +571,7 @@ function mulberry32(a){ return function(){
 }; }
 var redraws = [];
 function onRedraw(f){ redraws.push(f); f(); }
+function MONO(px){ return px + 'px "IBM Plex Mono", ui-monospace, Menlo, monospace'; }
 function css(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
 function theme(){ return { lapis:css("--lapis"), brick:css("--brick"), brass:css("--brass"),
   ink:css("--ink"), muted:css("--muted"), panel:css("--panel"), line:css("--line") }; }
@@ -1019,7 +1020,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
   function drawHeat(){
     var c = fitCanvas(cv), ctx = c.ctx, t = theme();
     cell = (c.w - pad - 4) / n;
-    ctx.font = "8px " + "ui-monospace, Menlo, monospace";
+    ctx.font = MONO(8);
     ctx.fillStyle = t.muted;
     for(var i=0;i<n;i++){
       ctx.textAlign = "right"; ctx.textBaseline = "middle";
@@ -1107,7 +1108,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
     ctx.beginPath(); ctx.moveTo(V0[0],V0[1]); ctx.lineTo(V2[0],V2[1]); ctx.stroke();
     ctx.restore();
     // labels
-    ctx.font = "12px ui-monospace, Menlo, monospace"; ctx.fillStyle = t.ink;
+    ctx.font = MONO(12); ctx.fillStyle = t.ink;
     ctx.textAlign="center";
     ctx.fillText("ALLC", V0[0]+4, V0[1]+16);
     ctx.fillText("ALLD", V1[0]-4, V1[1]+16);
@@ -1284,7 +1285,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     });
     ctx.strokeStyle = t.lapis; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillStyle = t.muted; ctx.font = MONO(10);
     ctx.fillText("f_C over " + series.length + " generations", 4, 11);
   }
   var raf = null;
@@ -1317,7 +1318,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
     var y = function(f){ return c.h-18 - f*(c.h-30); };
     ctx.strokeStyle = t.line; ctx.beginPath();
     ctx.moveTo(m, y(0)); ctx.lineTo(c.w-8, y(0)); ctx.moveTo(m, y(0)); ctx.lineTo(m, y(1)); ctx.stroke();
-    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillStyle = t.muted; ctx.font = MONO(10);
     ctx.fillText("1.0", m-2, c.h-6); ctx.fillText("2.0", c.w-24, c.h-6);
     ctx.fillText("f_C", 2, 12);
     ctx.beginPath();
@@ -1329,9 +1330,8 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
     ctx.strokeStyle = t.brass; ctx.setLineDash([3,3]); ctx.beginPath();
     ctx.moveTo(x(b), y(0)); ctx.lineTo(x(b), y(1)); ctx.stroke(); ctx.setLineDash([]);
   }
-  $("lat-phase-cap").textContent = "Python, " + ph.length + " values of b: " +
-    ph.map(function(d){ return "b=" + fmt(d.b,2) + " → " + fmt(d.coop_mean,3); }).join(" · ") +
-    ". The brass line is your current b.";
+  $("lat-phase-cap").textContent = "Python: asymptotic f_C for " + ph.length + " values of b from " +
+    fmt(ph[0].b,2) + " to " + fmt(ph[ph.length-1].b,2) + ", 90% cooperators at start. The brass line is your current b.";
   onRedraw(function(){ drawPhase(); });
   var origRender = render;
   render = function(){ origRender(); drawPhase(); };
@@ -1402,7 +1402,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
     var c = fitCanvas(cv), ctx = c.ctx, t = theme(), cols = palette();
     ctx.strokeStyle = t.line; ctx.beginPath();
     ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, c.h-m.b); ctx.lineTo(c.w-m.r, c.h-m.b); ctx.stroke();
-    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillStyle = t.muted; ctx.font = MONO(10);
     ctx.textAlign = "right";
     [ymin, (ymin+ymax)/2, ymax].forEach(function(v){ ctx.fillText(fmt(v,2), m.l-4, Y(v,c.h)+3); });
     ctx.textAlign = "center";
@@ -1461,7 +1461,7 @@ function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n)
     var c = fitCanvas(zcv), ctx = c.ctx, t = theme();
     ctx.strokeStyle = t.line; ctx.beginPath();
     ctx.moveTo(zm.l, zm.t); ctx.lineTo(zm.l, c.h-zm.b); ctx.lineTo(c.w-zm.r, c.h-zm.b); ctx.stroke();
-    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillStyle = t.muted; ctx.font = MONO(10);
     ctx.textAlign = "right"; ctx.fillText(fmt(hi,1), zm.l-4, ZY(hi,c.h)+8);
     ctx.fillText(fmt(lo,1), zm.l-4, ZY(lo,c.h));
     ctx.textAlign = "center"; ctx.fillText("opponent s_Y", (zm.l+c.w-zm.r)/2, c.h-6);

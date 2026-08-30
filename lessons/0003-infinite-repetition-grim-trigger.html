@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 3 — Infinite Repetition, Discounting and Grim Trigger</title>
+<link rel="stylesheet" href="../assets/course.css">
+<script src="../assets/quiz.js"></script><script src="../assets/payoff-matrix.js"></script><script src="../assets/delta-threshold.js"></script></head>
+<body><main>
+<h1>Infinite Repetition, Discounting and Grim Trigger</h1>
+<p class="subtitle">Lesson 3 · Remove the last round and cooperation becomes an equilibrium — exactly when players are patient enough. Derive the number.</p>
+<p class="meta">~20 min · Prerequisite: <a href="0002-finitely-repeated-pd.html">Lesson 2</a> · Reference: <a href="../reference/glossary.html#repeated">Glossary</a> · Mission: derive δ* for Grim Trigger and justify it with the one-shot deviation principle.</p>
+
+<details class="recall"><summary>Warm-up (Lesson 2): what did the unraveling proof need from the stage game, and what does SPE add to NE?</summary>
+<p>A unique stage NE, so the continuation is a constant. SPE demands a NE in every subgame, including off-path ones.</p></details>
+
+<h2>1. The infinitely repeated game</h2>
+<p>Play the PD in rounds <span class="math">t = 0, 1, 2, …</span> with no last round. Payoff for a stream <span class="math">u<sub>0</sub>, u<sub>1</sub>, …</span>:</p>
+<div class="def"><b>Discounted payoff</b> <span class="math">U = Σ<sub>t≥0</sub> δ<sup>t</sup> u<sub>t</sub></span>, with <b>discount factor</b> <span class="math">δ ∈ (0,1)</span>. Often normalised as <span class="math">(1−δ)U</span> so a constant stream <span class="math">u</span> has value <span class="math">u</span>.</div>
+<p>Two readings of δ, mathematically identical: (a) impatience — a unit tomorrow is worth δ today; (b) <b>continuation probability</b> — after each round the game ends with probability <span class="math">1−δ</span>. Reading (b) is why the "infinite" game is the right model for interactions of <em>uncertain</em> length, which fixes Lesson 2's paradox: no known last round ⇒ nothing to unravel from
+<a href="https://oyc.yale.edu/economics/econ-159">[Polak, ECON 159, repeated games]</a>.</p>
+<p>Useful sums (you know these): <span class="math">Σ<sub>t≥0</sub> δ<sup>t</sup> = 1/(1−δ)</span>, <span class="math">Σ<sub>t≥1</sub> δ<sup>t</sub> = δ/(1−δ)</span>.</p>
+
+<h2>2. The tool: one-shot deviation principle</h2>
+<p>Checking SPE naively means checking every strategy against infinitely many deviations at infinitely many histories. This theorem collapses it:</p>
+<div class="def"><b>One-shot deviation principle.</b> In a discounted repeated game with bounded stage payoffs, a strategy profile is an SPE <b>iff</b> no player can profit, at any history, by deviating in <em>that round only</em> and conforming to the strategy thereafter
+<a href="https://books.osborne.economics.utoronto.ca/">[Osborne &amp; Rubinstein, Lemma 98.2 / Prop. 8.x]</a>.</div>
+<p><i>Why it holds (sketch):</i> if a profitable multi-round deviation exists, discounting makes its gain from the tail vanish, so truncating to finitely many deviations keeps it profitable; then peel off the last deviating round — if that single deviation isn't profitable, removing it makes the deviation even better, contradiction by induction. Bounded payoffs + δ&lt;1 is what makes the tail vanish ("continuity at infinity").</p>
+
+<h2>3. Grim Trigger</h2>
+<div class="def"><b>Grim Trigger</b>: cooperate in round 0 and at every history in which nobody has ever defected; defect forever after any defection by anyone.</div>
+<p>Two kinds of history, so two checks.</p>
+<h3>(a) On-path: nobody has defected yet</h3>
+<pre>conform (C forever):        R + δR + δ²R + …  =  R/(1−δ)
+deviate once (D now, then   T + δP + δ²P + …  =  T + δP/(1−δ)
+  Grim says D forever)</pre>
+<p>No profitable deviation iff <span class="math">R/(1−δ) ≥ T + δP/(1−δ)</span>. Multiply by <span class="math">(1−δ)</span>: <span class="math">R ≥ (1−δ)T + δP</span>, i.e. <span class="math">δ(T−P) ≥ T−R</span>:</p>
+<div class="def" style="text-align:center;font-size:1.15rem"><b>δ ≥ δ*<sub>Grim</sub> = (T − R)/(T − P)</b></div>
+<p>Canonical payoffs: <span class="math">δ* = (5−3)/(5−1) = 1/2</span>.</p>
+<h3>(b) Off-path: someone has defected</h3>
+<p>Grim prescribes D forever for both. Deviating once to C yields <span class="math">S + δP/(1−δ) &lt; P/(1−δ)</span> since <span class="math">S &lt; P</span>. Never profitable, for any δ. (This is just "the stage NE repeated is always an SPE".)</p>
+<p><b>Theorem.</b> (Grim, Grim) is an SPE of the discounted infinitely repeated PD iff <span class="math">δ ≥ (T−R)/(T−P)</span>. ∎</p>
+<p class="side">Read the formula. Numerator: one-time gain from cheating. Denominator: per-round loss during punishment, scaled. <span class="math">S</span> is absent — the sucker payoff never enters, because Grim never expects to be suckered on-path and never cooperates off-path. Bigger temptation or milder punishment (P close to R) demands more patience.</p>
+
+<h2>4. Explore</h2>
+<div class="win"><h3>Interactive — δ* explorer</h3>
+<p>Edit payoffs (must remain a PD) and slide δ. Tasks:</p>
+<ol>
+<li>Confirm δ* = 0.5 for 5,3,1,0. Slide δ across it and watch the two present values cross.</li>
+<li>Change S from 0 to −10. Does δ* move? Explain in one sentence.</li>
+<li>Set P = 2.9 (just below R). What happens to δ*? Interpret: why is a weak punishment fatal?</li>
+<li>Find payoffs where δ* &lt; 0.2 — cooperation "easy". What did you have to do to T?</li>
+</ol>
+<div id="pm"></div><div id="dx"></div></div>
+
+<h2>5. What we have and haven't shown</h2>
+<p>We showed cooperation <em>can</em> be an equilibrium outcome — not that it must. (ALLD, ALLD) is still an SPE at every δ. Once δ ≥ δ* the game has many SPE; the next lesson shows (Tit-for-Tat) that the threshold depends on the strategy, and that <em>essentially every</em> feasible, individually rational payoff can be sustained: the Folk Theorem. Also note where <span class="math">2R &gt; T+S</span> finally bites: it guarantees (C,C) forever is the best <em>symmetric</em> outcome — otherwise players would prefer to sustain alternating exploitation instead.</p>
+
+<h2>6. Retrieval check</h2>
+<div class="quiz" id="quiz"></div>
+<details class="recall"><summary>Recall: derive δ* aloud from the two sums, then open.</summary>
+<p><span class="math">R/(1−δ) ≥ T + δP/(1−δ) ⇒ R ≥ (1−δ)T + δP ⇒ δ(T−P) ≥ T−R ⇒ δ ≥ (T−R)/(T−P)</span>.</p></details>
+
+<h2>Primary source</h2>
+<p>Osborne &amp; Rubinstein, <a href="https://books.osborne.economics.utoronto.ca/"><i>A Course in Game Theory</i></a>, ch. 8 §8.1–8.4 (discounting, one-deviation property, trigger strategies). For a numeric walk-through first: Polak, <a href="https://oyc.yale.edu/economics/econ-159">ECON 159</a>, the repeated-games lectures.</p>
+<div class="ask">Ask me: why the one-shot deviation principle needs bounded payoffs, what "continuity at infinity" means, or how to write the SPE check as a table for your report.</div>
+<nav class="lessons"><a href="0002-finitely-repeated-pd.html">← Lesson 2</a><span>Next: Lesson 4 — Tit-for-Tat δ* and the Folk Theorem →</span></nav>
+</main>
+<script>
+const dx=renderDeltaExplorer(document.getElementById('dx'),{
+  labels:{coop:'Conform: R/(1−δ)',dev:'Deviate: T + δP/(1−δ)'},
+  threshold:p=>(p.T-p.R)/(p.T-p.P),
+  cooperate:(p,d)=>p.R/(1-d),
+  deviate:(p,d)=>p.T+d*p.P/(1-d)});
+const pm=document.getElementById('pm');
+pm.addEventListener('pdchange',e=>dx.setPayoffs(e.detail));
+renderPayoffEditor(pm);
+renderQuiz(document.getElementById('quiz'),[
+ {stem:'δ*<sub>Grim</sub> equals (T−R)/(T−P). The numerator is…',
+  options:['The one-time gain from cheating a cooperator','The per-round loss during permanent mutual punishment','The difference between reward and sucker payoffs','The total discounted value of cooperating forever'],
+  answer:0, why:'T−R is what a single defection earns over conforming in that round.'},
+ {stem:'Why does S not appear in δ*<sub>Grim</sub>?',
+  options:['Grim is never suckered along the equilibrium path','Grim always cooperates again after any defection occurs','The sucker payoff is normalised to zero here','Discounting removes it from every sum we considered'],
+  answer:0, why:'On-path nobody defects; off-path Grim defects. Neither check involves receiving S.'},
+ {stem:'The one-shot deviation principle lets you verify SPE by checking…',
+  options:['Single-round deviations at every possible history','Infinite deviations at the initial history','Single-round deviations along the equilibrium path','Every strategy against every other strategy'],
+  answer:0, why:'One deviation, then conform — but at every history, on- and off-path. That is the whole SPE test.'},
+ {stem:'Interpreting δ as a continuation probability explains why…',
+  options:['Uncertain horizons avoid the backward-induction unraveling entirely','Finite horizons always support cooperation in equilibrium','Patient players never defect against Grim Trigger','The sucker payoff must be strictly negative'],
+  answer:0, why:'With no known last round there is nothing to induct backward from; the game is effectively infinite.'}
+]);
+</script></body></html>

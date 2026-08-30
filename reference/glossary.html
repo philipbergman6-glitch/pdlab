@@ -2,7 +2,7 @@
 <title>Glossary — Prisoner's Dilemma</title><link rel="stylesheet" href="../assets/course.css"></head>
 <body><main>
 <h1>Glossary</h1><p class="subtitle">Canonical terms for this course. Every lesson uses exactly these definitions.</p>
-<p class="meta">Reference · grows with each lesson · <a href="../lessons/0001-one-shot-prisoners-dilemma.html">Lesson 1</a> · <a href="../lessons/0002-finitely-repeated-pd.html">Lesson 2</a></p>
+<p class="meta">Reference · grows with each lesson · <a href="../lessons/0001-one-shot-prisoners-dilemma.html">Lesson 1</a> · <a href="../lessons/0002-finitely-repeated-pd.html">Lesson 2</a> · <a href="../lessons/0003-infinite-repetition-grim-trigger.html">Lesson 3</a></p>
 
 <h2>One-shot game (Lesson 1)</h2>
 <dl>
@@ -27,6 +27,9 @@
 <dt><b>Subgame-perfect equilibrium (SPE)</b></dt><dd>A strategy profile inducing a NE in every subgame, on- and off-path. Rules out non-credible threats.</dd>
 <dt><b>Backward induction</b></dt><dd>Solve the last subgames, replace by equilibrium payoffs, step back. Yields SPE in finite games.</dd>
 <dt><b>Unraveling theorem</b></dt><dd>Finitely repeated PD: unique SPE is all-D at every history. Needs only a unique stage NE.</dd>
+<dt><b>Discount factor δ</b></dt><dd>Weight on next-round payoff; <span class="math">U = Σ δ<sup>t</sup>u<sub>t</sub></span>. Equivalently the probability the game continues. Sums: <span class="math">Σ<sub>t≥0</sub>δ<sup>t</sup> = 1/(1−δ)</span>.</dd>
+<dt><b>One-shot deviation principle</b></dt><dd>Profile is SPE iff no single-round deviation at any history is profitable (bounded payoffs, δ&lt;1).</dd>
+<dt><b>Grim Trigger</b></dt><dd>C until any defection, then D forever. SPE iff <span class="math">δ ≥ (T−R)/(T−P)</span>. Canonical: 1/2. Independent of S.</dd>
 <dt><b>Grim-until-<i>k</i></b></dt><dd>Teaching strategy: cooperate until round <i>k</i> or opponent's first defection, then defect forever. Best response to Grim-until-<i>m</i> is <i>k = m−1</i>.</dd>
 </dl>
 

@@ -11,7 +11,7 @@ render: $(CHAPTERS) 00_meta.yaml references.bib ../results/canonical.json
 
 $(OUT): render
 	cd build && pandoc 00_meta.yaml $(CHAPTERS) \
-	  --from markdown+tex_math_dollars+citations --citeproc \
+	  --from markdown+tex_math_dollars+citations --filter pandoc-crossref --citeproc \
 	  --bibliography=references.bib --csl=apa.csl \
 	  --pdf-engine=tectonic --toc --toc-depth=2 --number-sections \
 	  --resource-path=.:.. -o prisoners_dilemma_report.pdf 2> pandoc.log; \

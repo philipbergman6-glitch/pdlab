@@ -106,16 +106,20 @@ def tft_nash_threshold_symbolic() -> sp.Expr:
 def tft_spe_conditions_symbolic() -> dict[str, sp.Rel]:
     """One-shot-deviation conditions for (TFT, TFT) to be subgame perfect.
 
-    Three classes of histories must be checked:
+    Four classes of histories must be checked (one-shot deviations only):
 
-    * on path (both cooperated last round): delta >= (T-R)/(R-S) and delta >= (T-R)/(T-P)
-    * after being cheated (I played C, opponent D): TFT prescribes D, yielding T, S, T, S...;
-      forgiving instead yields R forever, so punishing is optimal iff delta <= (T-R)/(R-S)
-    * after mutual defection: TFT prescribes D forever (P each round); a one-shot C yields
-      S, T, S, T... so defecting is optimal iff delta <= (P-S)/(T-P)
+    * on path (CC): TFT prescribes C (R forever); deviating once yields T, S, T, S, ...
+      so cooperating is optimal iff delta >= (T-R)/(R-S)
+    * after being cheated (CD): TFT prescribes D, yielding T, S, T, S...; forgiving
+      instead yields R forever, so punishing is optimal iff delta <= (T-R)/(R-S)
+    * after mutual defection (DD): TFT prescribes D forever (P each round); a one-shot C
+      yields S, T, S, T... so defecting is optimal iff delta <= (P-S)/(T-P)
+    * after cheating (DC): TFT prescribes C, yielding S, T, S, T...; deviating to D yields
+      P forever, so complying is optimal iff delta >= (P-S)/(T-P)
 
-    Generic payoffs cannot satisfy both delta >= (T-R)/(R-S) and delta <= (T-R)/(R-S) except
-    at a single value, hence TFT is (generically) *not* subgame perfect.
+    Hence (TFT, TFT) is subgame perfect iff delta = (T-R)/(R-S) = (P-S)/(T-P), which
+    requires T - R = P - S: a knife-edge that generic payoffs violate.  The Nash
+    condition delta >= (T-R)/(T-P) is implied at that point.
     """
     punish_value = (T + delta * S) / (1 - delta**2)
     forgive_value = R / (1 - delta)
@@ -128,6 +132,8 @@ def tft_spe_conditions_symbolic() -> dict[str, sp.Rel]:
         "after_cheated_threshold": delta <= (T - R) / (R - S),
         "after_dd_prefers_defect": sp.simplify(dd_value - dd_dev_value) >= 0,
         "after_dd_threshold": delta <= (P - S) / (T - P),
+        "after_dc_prefers_comply": sp.simplify(dd_dev_value - dd_value) >= 0,
+        "after_dc_threshold": delta >= (P - S) / (T - P),
     }
 
 
@@ -141,10 +147,18 @@ class Thresholds:
 
     @property
     def tft_is_spe_possible(self) -> bool:
-        """True iff some delta in [0,1) satisfies every TFT one-shot-deviation condition."""
+        """True iff some delta in [0,1) satisfies every TFT one-shot-deviation condition.
+
+        The four conditions pin delta = (T-R)/(R-S) = (P-S)/(T-P), i.e. T - R = P - S.
+        """
         d = self.tft_vs_alternate
         tol = 1e-9
-        return 0 <= d < 1 and d >= self.tft_vs_alld - tol and d <= self.tft_after_dd_max + tol
+        return 0 <= d < 1 and abs(d - self.tft_after_dd_max) <= tol and d >= self.tft_vs_alld - tol
+
+    @property
+    def tft_spe_delta(self) -> float | None:
+        """The unique delta at which (TFT, TFT) is subgame perfect, if any."""
+        return self.tft_vs_alternate if self.tft_is_spe_possible else None
 
 
 def thresholds(pm: PayoffMatrix) -> Thresholds:
