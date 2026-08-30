@@ -49,7 +49,7 @@ class Scale:
     async_steps: int = 100
     moran_runs: int = 2000
     moran_N: int = 50
-    moran_steps: int = 200_000
+    moran_steps: int = 500_000
     learner_rounds: int = 30_000
     learner_seeds: int = 5
     b_grid: int = 25

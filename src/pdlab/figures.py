@@ -100,26 +100,28 @@ def fig_folk_theorem(pm: PayoffMatrix, out: Path) -> list[Path]:
 
 
 def fig_thresholds(res: dict[str, Any], out: Path) -> list[Path]:
+    """Normalised values (1-delta) V so every curve is a per-round payoff."""
     c = res["curves"]
     d = np.array(c["delta"])
     th = res["thresholds"]
     fig, ax = plt.subplots(figsize=(6.2, 4.2))
-    ax.plot(d, c["V_coop"], color=COOP, lw=2, label=r"cooperate forever: $R/(1-\delta)$")
-    ax.plot(d, c["V_dev_alld"], color=DEFECT, lw=2, label=r"defect forever: $T+\delta P/(1-\delta)$")
-    ax.plot(d, c["V_dev_alt"], color=ACCENT, lw=2, label=r"alternate vs TFT: $(T+\delta S)/(1-\delta^2)$")
+    ax.plot(d, (1 - d) * np.array(c["V_coop"]), color=COOP, lw=2, label=r"cooperate forever: $R$")
+    ax.plot(d, (1 - d) * np.array(c["V_dev_alld"]), color=DEFECT, lw=2, label=r"defect forever vs Grim/TFT: $(1-\delta)T+\delta P$")
+    ax.plot(d, (1 - d) * np.array(c["V_dev_alt"]), color=ACCENT, lw=2, label=r"alternate vs TFT: $(T+\delta S)/(1+\delta)$")
     for s in res["simulation"]:
-        ax.errorbar(s["delta"], s["coop_sim"], yerr=2 * s["coop_se"], fmt="o", color=COOP, ms=4, capsize=2)
-        ax.errorbar(s["delta"], s["alld_sim"], yerr=2 * s["alld_se"], fmt="s", color=DEFECT, ms=4, capsize=2)
-        ax.errorbar(s["delta"], s["alt_sim"], yerr=2 * s["alt_se"], fmt="^", color=ACCENT, ms=4, capsize=2)
+        f = 1 - s["delta"]
+        ax.errorbar(s["delta"], f * s["coop_sim"], yerr=2 * f * s["coop_se"], fmt="o", color=COOP, ms=4, capsize=2)
+        ax.errorbar(s["delta"], f * s["alld_sim"], yerr=2 * f * s["alld_se"], fmt="s", color=DEFECT, ms=4, capsize=2)
+        ax.errorbar(s["delta"], f * s["alt_sim"], yerr=2 * f * s["alt_se"], fmt="^", color=ACCENT, ms=4, capsize=2)
     ax.axvline(th["grim_spe"], color=DEFECT, ls=":", lw=1)
     ax.axvline(th["tft_vs_alternate"], color=ACCENT, ls=":", lw=1)
-    ax.text(th["grim_spe"] + 0.01, 2, r"$\delta^*_{Grim}=%.2f$" % th["grim_spe"], color=DEFECT, fontsize=9)
-    ax.text(th["tft_vs_alternate"] + 0.01, 5, r"$\delta^*_{TFT}=%.2f$" % th["tft_vs_alternate"], color=ACCENT, fontsize=9)
-    ax.set_ylim(0, 35)
+    ax.text(th["grim_spe"] + 0.01, 1.3, r"$\delta^*_{\mathrm{Grim}}=%.2f$" % th["grim_spe"], color=DEFECT, fontsize=9)
+    ax.text(th["tft_vs_alternate"] + 0.01, 1.0, r"$\delta^*_{\mathrm{TFT}}=%.2f$" % th["tft_vs_alternate"], color=ACCENT, fontsize=9)
+    ax.set_ylim(0.5, 5.2)
     ax.set_xlabel(r"discount factor $\delta$")
-    ax.set_ylabel("discounted total payoff")
-    ax.set_title("Cooperation vs. deviation values (lines: exact; markers: geometric-stopping simulation)")
-    ax.legend(loc="upper left")
+    ax.set_ylabel(r"normalised payoff $(1-\delta)\,V$")
+    ax.set_title("Cooperation vs. deviation (lines: exact; markers: geometric-stopping simulation, $\pm 2$ s.e.)")
+    ax.legend(loc="upper right")
     return save(fig, out, "thresholds")
 
 

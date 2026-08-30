@@ -4,10 +4,10 @@ Status legend: [ ] todo  [~] in progress  [x] done
 
 ## M0 Scaffold
 - [x] git init, uv project, dirs, PLAN/NOTES/ASSUMPTIONS
-- [ ] toolchain: pandoc + tectonic (brew, background)
+- [x] toolchain: pandoc + tectonic
 
 ## M1 Core package `pdlab`
-- [ ] game.py — PayoffMatrix (T,R,P,S validation), Move enum, Game
+- [x] core modules all written (game, strategies, match, tournament, markov, analytic, evolution, spatial, finite, learning, experiments, figures, reproduce, cli)
 - [ ] strategies.py — ≥15 strategies via Strategy protocol + registry
 - [ ] match.py — play_match(s1,s2,rounds,noise,rng)
 - [ ] tournament.py — round robin, noise, seeds → DataFrame
