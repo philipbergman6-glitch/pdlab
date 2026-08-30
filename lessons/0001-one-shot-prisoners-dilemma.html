@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 1 — The One-Shot Prisoner's Dilemma</title>
+<link rel="stylesheet" href="../assets/course.css">
+<script src="../assets/quiz.js"></script><script src="../assets/payoff-matrix.js"></script></head>
+<body><main>
+<h1>The One-Shot Prisoner's Dilemma</h1>
+<p class="subtitle">Lesson 1 · Why two rational players walk into the worst outcome, and the two inequalities that make it a dilemma.</p>
+<p class="meta">~15 min · Prerequisite: none · Reference: <a href="../reference/glossary.html">Glossary</a> · Mission: prove (D,D) is the unique NE and explain the dilemma from scratch.</p>
+
+<h2>1. The game</h2>
+<p>Two players each choose, simultaneously and without communication, one of two actions: <b>C</b>ooperate or <b>D</b>efect. Payoffs are written (<span class="p1">row</span>, <span class="p2">column</span>):</p>
+<table class="payoff"><thead><tr><th></th><th>C</th><th>D</th></tr></thead>
+<tbody><tr><th>C</th><td><span class="p1">R</span>, <span class="p2">R</span></td><td><span class="p1">S</span>, <span class="p2">T</span></td></tr>
+<tr><th>D</th><td><span class="p1">T</span>, <span class="p2">S</span></td><td><span class="p1">P</span>, <span class="p2">P</span></td></tr></tbody></table>
+<div class="def"><b>Definition (Prisoner's Dilemma).</b> The symmetric 2×2 game above is a PD iff
+<br>(i) <span class="math">T &gt; R &gt; P &gt; S</span>  and  (ii) <span class="math">2R &gt; T + S</span>.</div>
+<p>Mnemonic: <b>T</b>emptation, <b>R</b>eward, <b>P</b>unishment, <b>S</b>ucker. Canonical numbers: 5, 3, 1, 0. The "prisoners" story (two suspects, confess or stay silent) is just one instantiation; the structure is what matters, and it recurs in arms races, price wars, climate negotiation, and doping in sport
+<a href="https://plato.stanford.edu/entries/prisoner-dilemma/">[SEP §1]</a>.</p>
+
+<h2>2. Dominance: the two-line proof</h2>
+<div class="def"><b>Definition.</b> Action <i>a</i> <b>strictly dominates</b> <i>b</i> for player <i>i</i> if <i>a</i> yields strictly higher payoff than <i>b</i> against <em>every</em> action of the opponent.</div>
+<p>For the row player, compare D against C column-by-column:</p>
+<pre>opponent plays C:  u(D,C) = T  &gt;  R = u(C,C)     [T &gt; R]
+opponent plays D:  u(D,D) = P  &gt;  S = u(C,D)     [P &gt; S]</pre>
+<p>So D strictly dominates C. By symmetry the same holds for the column player. A player who maximises their own payoff never plays a strictly dominated action — <em>no matter what they believe the other will do</em>. Hence both defect. That's the whole argument; notice it only used <span class="math">T &gt; R</span> and <span class="math">P &gt; S</span>.</p>
+
+<h2>3. Nash equilibrium</h2>
+<div class="def"><b>Definition.</b> A <b>Nash equilibrium</b> is an action profile in which each player's action is a <b>best response</b> to the others': no player can gain by deviating unilaterally
+<a href="https://mitpress.mit.edu/9780262650403/a-course-in-game-theory/">[Osborne &amp; Rubinstein, Def. 14.1]</a>.</div>
+<p><b>Claim.</b> (D,D) is the unique Nash equilibrium of the PD.</p>
+<p><i>Proof.</i> Existence: at (D,D), row deviating to C gets S &lt; P; same for column. Uniqueness: in any profile where some player plays C, that player can switch to D and strictly gain (D dominates C), so no such profile is an equilibrium. ∎</p>
+<p class="side">Dominance-solvable ⇒ unique NE. The converse fails in general: most games have a NE but no dominant strategy. The PD is special precisely because the answer doesn't depend on what you think the other will do.</p>
+
+<h2>4. Why it is a <em>dilemma</em>: Pareto</h2>
+<div class="def"><b>Definition.</b> Profile <i>x</i> <b>Pareto-dominates</b> <i>y</i> if every player is weakly better off in <i>x</i> and at least one strictly. A profile is <b>Pareto efficient</b> if nothing Pareto-dominates it.</div>
+<p>Since <span class="math">R &gt; P</span>, (C,C) Pareto-dominates (D,D). Individually rational play lands on the one outcome that is Pareto-dominated by the mutual-cooperation outcome. That gap between <em>individual</em> and <em>collective</em> rationality is the dilemma — and it is what every later lesson (repetition, evolution, spatial structure) tries to close.</p>
+
+<h2>5. What is the second inequality for?</h2>
+<p>Condition (ii), <span class="math">2R &gt; T + S</span>, plays no role in the one-shot analysis. It says: the total from mutual cooperation exceeds the total from one player exploiting the other. Without it, two players could do better by <em>alternating</em> (C,D), (D,C), (C,D), … than by cooperating every round — so "cooperation" wouldn't be the natural target in repeated play
+<a href="https://www.jstor.org/stable/173932">[Axelrod 1980, JCR]</a>. Keep it in your pocket for Lesson 3.</p>
+
+<h2>6. Practice: break the dilemma</h2>
+<div class="win"><h3>Interactive — payoff editor</h3>
+<p>Underlined numbers are best responses; a highlighted cell is a Nash equilibrium. Edit T, R, P, S and do these three tasks:</p>
+<ol>
+<li>Make (ii) fail while keeping (i). Confirm (D,D) is <em>still</em> the unique NE — so what did (ii) never affect?</li>
+<li>Set <span class="math">R = T</span>. What happens to the dominance claim? Which check breaks first?</li>
+<li>Find values where <em>C</em> strictly dominates D. Write the two inequalities you needed.</li>
+</ol>
+<div id="editor"></div></div>
+
+<h2>7. Retrieval check</h2>
+<p>Close the page in your head first. Answer from memory.</p>
+<div class="quiz" id="quiz"></div>
+<details class="recall"><summary>Recall prompt: state the uniqueness proof aloud, then open.</summary>
+<p>Any profile with a C in it lets that player switch to D for a strict gain (T &gt; R or P &gt; S). So only (D,D) survives, and it survives because P &gt; S for both.</p></details>
+
+<h2>Primary source</h2>
+<p>Read <a href="https://plato.stanford.edu/entries/prisoner-dilemma/">Kuhn, "Prisoner's Dilemma", <i>Stanford Encyclopedia of Philosophy</i></a>, §1–§2 (symmetric 2×2 PD, the two conditions). It's the most careful free treatment and it introduces the notation the rest of the literature uses. Optional: Osborne, <i>An Introduction to Game Theory</i>, ch. 2 for Nash equilibrium formally.</p>
+
+<div class="ask">Anything unclear — the definition of best response, why uniqueness needs both strict inequalities, how this maps onto your project's report section — ask me. I'm the teacher for this course; questions are the point.</div>
+
+<nav class="lessons"><span>← (start)</span><span>Next: Lesson 2 — Finitely repeated PD &amp; backward induction →</span></nav>
+</main>
+<script>
+renderPayoffEditor(document.getElementById('editor'));
+renderQuiz(document.getElementById('quiz'),[
+ {stem:'Which fact alone proves that Defect strictly dominates Cooperate?',
+  options:['T exceeds R and P exceeds S','R exceeds P and T exceeds S','Two times R exceeds T plus S','T exceeds R and R exceeds P'],
+  answer:0, why:'Dominance compares D vs C column by column: T &gt; R (opponent cooperates) and P &gt; S (opponent defects).'},
+ {stem:'Why is (D,D) the <em>unique</em> Nash equilibrium?',
+  options:['Any cooperator can switch and strictly gain','Mutual defection is the only symmetric profile','Both players prefer punishment over the sucker','Defection is the best Pareto efficient choice'],
+  answer:0, why:'Uniqueness follows from strict dominance: any profile containing C has a profitable unilateral deviation.'},
+ {stem:'What does 2R &gt; T + S rule out?',
+  options:['Alternating exploitation ever beating mutual cooperation','Mutual defection being a Nash equilibrium','Defection strictly dominating the cooperate action','Mutual cooperation being a Pareto optimum'],
+  answer:0, why:'It guarantees the joint payoff of (C,C) beats taking turns at (C,D)/(D,C). Irrelevant one-shot; essential once the game repeats.'},
+ {stem:'The "dilemma" is precisely that the unique NE is…',
+  options:['Strictly Pareto-dominated by the mutual cooperation outcome','Not reachable when players are fully rational','Unstable under any small perturbation of payoffs','Dependent on the beliefs about the opponent'],
+  answer:0, why:'R &gt; P means (C,C) makes both strictly better off than (D,D) — individual rationality defeats collective rationality.'}
+]);
+</script></body></html>

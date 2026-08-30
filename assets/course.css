@@ -1,0 +1,59 @@
+/* Prisoner's Dilemma course — shared stylesheet (Tufte-inspired) */
+:root{
+  --bg:#fffff8;--fg:#111;--muted:#666;--rule:#ddd;--accent:#a00;--accent2:#1a5fb4;
+  --ok:#1a7f37;--bad:#b3261e;--code:#f4f4ee;--card:#f8f8f2;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#151515;--fg:#ddd;--muted:#999;--rule:#333;--accent:#ff6b6b;--accent2:#7cb0ff;
+  --ok:#5ccb7a;--bad:#ff7b72;--code:#1f1f1f;--card:#1c1c1c}
+}
+html{font-size:17px}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:Georgia,"Times New Roman",serif;line-height:1.55}
+main{max-width:46rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+h1{font-size:2.1rem;font-weight:400;font-style:italic;margin:0 0 .25rem;line-height:1.15}
+h2{font-size:1.4rem;font-weight:400;font-style:italic;margin:2.6rem 0 .8rem;border-bottom:1px solid var(--rule);padding-bottom:.25rem}
+h3{font-size:1.05rem;font-weight:700;margin:1.6rem 0 .5rem}
+.subtitle{color:var(--muted);font-style:italic;margin:0 0 2rem}
+.meta{font-size:.85rem;color:var(--muted);margin-bottom:2rem}
+p{margin:.8rem 0}
+a{color:var(--accent2)}
+code,pre{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.9em}
+code{background:var(--code);padding:.05em .3em;border-radius:3px}
+pre{background:var(--code);padding:.8rem 1rem;overflow-x:auto;border-radius:4px}
+.math{font-family:"Times New Roman",Georgia,serif;font-style:italic}
+.def{border-left:3px solid var(--accent);padding:.4rem 1rem;margin:1.2rem 0;background:var(--card)}
+.def b{font-style:normal}
+.side{font-size:.85rem;color:var(--muted);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.5rem 0;margin:1.2rem 0}
+.win{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:1rem 1.2rem;margin:1.5rem 0}
+.win h3{margin-top:0}
+table.payoff{border-collapse:collapse;margin:1rem auto;font-family:"Times New Roman",serif}
+table.payoff th,table.payoff td{border:1px solid var(--rule);padding:.45rem .9rem;text-align:center;min-width:5.5rem}
+table.payoff th{font-weight:400;font-style:italic;color:var(--muted)}
+table.payoff td.hl{background:rgba(170,0,0,.10);font-weight:700}
+.p1{color:var(--accent)}.p2{color:var(--accent2)}
+/* quiz */
+.quiz{margin:1.5rem 0}
+.q{border:1px solid var(--rule);border-radius:6px;padding:1rem 1.2rem;margin:1rem 0;background:var(--card)}
+.q .stem{margin:0 0 .6rem;font-weight:700}
+.q button{display:block;width:100%;text-align:left;margin:.35rem 0;padding:.5rem .8rem;
+  font:inherit;font-size:.95rem;background:var(--bg);color:var(--fg);border:1px solid var(--rule);border-radius:4px;cursor:pointer}
+.q button:hover{border-color:var(--accent2)}
+.q button.ok{border-color:var(--ok);background:rgba(26,127,55,.12)}
+.q button.bad{border-color:var(--bad);background:rgba(179,38,30,.12)}
+.q .fb{margin:.6rem 0 0;font-size:.9rem;color:var(--muted);min-height:1.2em}
+.recall summary{cursor:pointer;font-weight:700}
+.recall{border:1px dashed var(--rule);padding:.5rem 1rem;margin:1rem 0;border-radius:4px}
+/* matrix editor */
+.editor{display:grid;grid-template-columns:auto auto;gap:.6rem 1rem;align-items:center;margin:1rem 0}
+.editor label{font-style:italic}
+.editor input{width:5rem;font:inherit;padding:.25rem .4rem;background:var(--bg);color:var(--fg);border:1px solid var(--rule);border-radius:4px}
+.check{list-style:none;padding:0;margin:.8rem 0}
+.check li{padding:.2rem 0}
+.check li::before{content:"○ ";color:var(--muted)}
+.check li.ok::before{content:"✓ ";color:var(--ok)}
+.check li.bad::before{content:"✗ ";color:var(--bad)}
+.verdict{font-weight:700;margin:.6rem 0}
+nav.lessons{font-size:.9rem;color:var(--muted);display:flex;justify-content:space-between;margin-top:3rem;border-top:1px solid var(--rule);padding-top:1rem}
+.ask{background:rgba(26,95,180,.08);border-radius:6px;padding:.8rem 1.2rem;margin:2rem 0;font-size:.95rem}
+@media print{body{background:#fff;color:#000}.q button,.editor{display:none}.recall{display:block}details{open:true}}
