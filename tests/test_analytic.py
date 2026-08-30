@@ -131,6 +131,8 @@ def test_tft_spe_conditions_are_mutually_exclusive_for_axelrod():
         "after_cheated_threshold",
         "after_dd_prefers_defect",
         "after_dd_threshold",
+        "after_dc_prefers_comply",
+        "after_dc_threshold",
     }
     on_path = cond["on_path_vs_alternate"].subs(SUB)
     after_dd = cond["after_dd_threshold"].subs(SUB)

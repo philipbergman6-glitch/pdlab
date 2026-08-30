@@ -20,21 +20,21 @@ Status legend: [ ] todo  [~] in progress  [x] done
 - [ ] export.py — results/canonical.json for app
 
 ## M2 Tests
-- [ ] pytest + hypothesis, ≥90% cov, ruff, mypy clean, GH Actions
+- [x] pytest + hypothesis (346 tests, 99% cov), ruff, mypy clean, GH Actions
 
 ## M3 Figures + results
-- [ ] all figures PDF+PNG, tables, canonical.json
+- [x] all figures PDF+PNG, tables, canonical.json, hero GIF
 
 ## M4 Report (pandoc → PDF)
-- [ ] sections 1–9 + bib; compile clean
+- [x] chapters 1–8 + bib; pandoc-crossref + tectonic build (48 pp.)
 
 ## M5 App (single HTML)
-- [ ] frontend-design skill → build → verify in Safari/Chrome
+- [x] frontend-design skill → build → verified headless Chrome (Safari not machine-verified)
 
 ## M6 README, REVIEW (hostile prof + senior eng), cross-checks
-- [ ] README.md w/ hero GIF
+- [x] README.md w/ hero GIF
 - [ ] REVIEW.md
-- [ ] 3 published cross-checks
+- [x] 3 published cross-checks (Nowak–May 0.318, Stewart–Plotkin ZD vectors, Beaufils Gradual>TFT) + axelrod lib 91/91
 
 ## Original contribution decision
 Noise-robustness of memory-1 strategies under implementation error ε:

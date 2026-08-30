@@ -1,6 +1,9 @@
 # NOTES.md — running state (update after each milestone)
 
-## Current state (2026-08-30)
+## Current state (2026-08-30, evening)
+- All deliverables built. Waiting on REVIEW.md (hostile prof + senior eng subagents), then fix + final commit.
+
+## Earlier state
 - M1 core package DONE and committed. Full reproduce = ~60 s (Moran now 500k steps → ~4 min).
 - Cross-check vs axelrod lib: 91/91 deterministic pairings exact; ZD vectors match. results/crosscheck_azelrod.md
 - Subagents running: tests (tests/), report theory chapters (report/01–05 + bib), app (app/template.html + scripts/build_app.py).
