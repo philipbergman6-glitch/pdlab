@@ -218,42 +218,39 @@ class TitForTwoTats(Strategy):
 
 
 class ContriteTitForTat(Strategy):
-    """TFT with 'standing' (Boerlijst, Nowak & Sigmund 1997).
+    """TFT with *standing* (Boerlijst, Nowak & Sigmund 1997, "The logic of contrition").
 
-    Tracks whether it is *contrite* (defected by mistake against a cooperator).
-    A contrite player cooperates even if the opponent retaliates, breaking the
-    echo of mutual recrimination that plain TFT falls into under noise.
+    A player is in *bad standing* after defecting against an opponent who was in
+    good standing; cooperating restores good standing.  CTFT defects only when it
+    is itself in good standing and the opponent is in bad standing.  Hence after
+    an accidental defection it accepts one retaliation without answering it,
+    which breaks the echo of mutual recrimination that plain TFT falls into.
+    Without errors it is indistinguishable from TFT.
     """
 
     name = "CTFT"
 
     def __init__(self) -> None:
         super().__init__()
-        self.contrite = False
-        self.intended: Move = C
+        self.my_good = True
+        self.opp_good = True
 
     def _reset_state(self) -> None:
-        self.contrite = False
-        self.intended = C
+        self.my_good = True
+        self.opp_good = True
+
+    @property
+    def contrite(self) -> bool:
+        return not self.my_good
 
     def _decide(self, rng: np.random.Generator) -> Move:
-        if not self.opp:
-            self.intended = C
-        elif self.contrite:
-            self.intended = C
-        else:
-            self.intended = self.opp[-1]
-        return self.intended
+        return D if (self.my_good and not self.opp_good) else C
 
     def observe(self, own: Move, opp: Move, payoff: float) -> None:
         super().observe(own, opp, payoff)
-        # contrition arises when I actually defected while intending C, and the
-        # opponent cooperated; it is cleared once I have cooperated again.
-        if self.contrite:
-            if own is C:
-                self.contrite = False
-        elif own is D and self.intended is C and opp is C:
-            self.contrite = True
+        my_prev, opp_prev = self.my_good, self.opp_good
+        self.my_good = not (own is D and opp_prev)
+        self.opp_good = not (opp is D and my_prev)
 
 
 class SoftMajority(Strategy):

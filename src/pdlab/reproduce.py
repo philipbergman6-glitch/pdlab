@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from pdlab import figures as F
+from pdlab import figures as figs
 from pdlab.experiments import Scale, run_all
 from pdlab.game import PayoffMatrix
 from pdlab.spatial import SpatialPD
@@ -40,16 +40,18 @@ def write_tables(res: dict[str, Any], results_dir: Path) -> list[Path]:
 
 
 def make_figures(res: dict[str, Any], fig_dir: Path, pm: PayoffMatrix) -> list[Path]:
-    F.setup_style()
+    figs.setup_style()
     paths: list[Path] = []
-    paths += F.fig_folk_theorem(pm, fig_dir)
-    paths += F.fig_thresholds(res["thresholds"], fig_dir)
-    paths += F.fig_tournament(res["tournament"], fig_dir)
-    paths += F.fig_noise_selfplay(res["noise_selfplay"], fig_dir)
-    paths += F.fig_replicator(res["replicator"], fig_dir)
-    paths += F.fig_moran(res["moran_fixation"], res["moran_mutation"], res["evolution_noise"], fig_dir)
-    paths += F.fig_spatial(res["spatial"], fig_dir)
-    paths += F.fig_zd(res["zd"], pm, fig_dir)
+    paths += figs.fig_folk_theorem(pm, fig_dir)
+    paths += figs.fig_thresholds(res["thresholds"], fig_dir)
+    paths += figs.fig_tournament(res["tournament"], fig_dir)
+    paths += figs.fig_noise_selfplay(res["noise_selfplay"], fig_dir)
+    paths += figs.fig_replicator(res["replicator"], fig_dir)
+    paths += figs.fig_moran(
+        res["moran_fixation"], res["moran_mutation"], res["evolution_noise"], fig_dir
+    )
+    paths += figs.fig_spatial(res["spatial"], fig_dir)
+    paths += figs.fig_zd(res["zd"], pm, fig_dir)
     return paths
 
 
@@ -60,7 +62,7 @@ def make_hero_gif(fig_dir: Path, L: int = 99, steps: int = 80) -> Path:
         g.step()
         frames.append(g.grid.copy())
     p = fig_dir / "hero_kaleidoscope.gif"
-    F.make_gif(frames, p)
+    figs.make_gif(frames, p)
     return p
 
 
@@ -81,19 +83,42 @@ def _app_payload(res: dict[str, Any]) -> dict[str, Any]:
         },
         "noise_selfplay": {
             "eps": res["noise_selfplay"]["eps"],
-            "strategies": {k: {"p": v["p"], "exact": v["exact"], "series_axelrod": v["series_axelrod"]} for k, v in res["noise_selfplay"]["strategies"].items()},
+            "strategies": {
+                k: {"p": v["p"], "exact": v["exact"], "series_axelrod": v["series_axelrod"]}
+                for k, v in res["noise_selfplay"]["strategies"].items()
+            },
         },
         "spatial_phase": res["spatial"]["phase"],
         "spatial_coop_1p8_2": res["spatial"]["coop_1p8_2"],
         "moran_fixation": res["moran_fixation"]["rows"],
-        "moran_mutation": [{k: v for k, v in r.items() if k != "mean_freq"} for r in res["moran_mutation"]["rows"]],
-        "evolution_noise": [{"eps": r["eps"], "dominant": r["dominant"]} for r in res["evolution_noise"]["rows"]],
+        "moran_mutation": [
+            {k: v for k, v in r.items() if k != "mean_freq"} for r in res["moran_mutation"]["rows"]
+        ],
+        "moran_three": [
+            {k: v for k, v in r.items() if k != "series_stride"}
+            for r in res["moran_mutation"]["three"]["rows"]
+        ],
+        "evolution_noise": [
+            {"eps": r["eps"], "dominant": r["dominant"]} for r in res["evolution_noise"]["rows"]
+        ],
         "zd": {
             "extort2": res["zd"]["extort2"],
             "zdgtft2": res["zd"]["zdgtft2"],
             "scatter": res["zd"]["scatter"],
-            "learner_final": [{k: r[k] for k in ("opponent", "seed", "final_learner", "final_opponent", "final_policy")} for r in res["zd"]["learner"]],
-            "evolution_final": dict(zip(res["zd"]["evolution"]["names"], res["zd"]["evolution"]["replicator_final"], strict=True)),
+            "learner_final": [
+                {
+                    k: r[k]
+                    for k in ("opponent", "seed", "final_learner", "final_opponent", "final_policy")
+                }
+                for r in res["zd"]["learner"]
+            ],
+            "evolution_final": dict(
+                zip(
+                    res["zd"]["evolution"]["names"],
+                    res["zd"]["evolution"]["replicator_final"],
+                    strict=True,
+                )
+            ),
             "moran_dominant": res["zd"]["evolution"]["moran_dominant"],
         },
     }
@@ -111,7 +136,9 @@ def reproduce(root: Path, scale: Scale, hero: bool = True) -> dict[str, Any]:
     write_tables(res, results_dir)
     make_figures(res, fig_dir, pm)
     if hero:
-        make_hero_gif(fig_dir, L=min(99, max(21, scale.lattice - 1)), steps=min(80, scale.lattice_steps))
+        make_hero_gif(
+            fig_dir, L=min(99, max(21, scale.lattice - 1)), steps=min(80, scale.lattice_steps)
+        )
     res["elapsed_total_s"] = time.time() - t0
     return res
 
@@ -124,4 +151,4 @@ def load_canonical(root: Path) -> dict[str, Any]:
     return data
 
 
-__all__ = ["load_canonical", "make_figures", "make_hero_gif", "reproduce", "write_tables", "np"]
+__all__ = ["load_canonical", "make_figures", "make_hero_gif", "np", "reproduce", "write_tables"]

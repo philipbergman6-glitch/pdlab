@@ -7,14 +7,16 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+import matplotlib.colors
+from cycler import cycler
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from matplotlib.colors import ListedColormap  # noqa: E402
-from matplotlib.figure import Figure  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 
-from pdlab.game import PayoffMatrix  # noqa: E402
+from pdlab.game import PayoffMatrix
 
 COOP = "#2A6F97"
 DEFECT = "#C9463D"
@@ -39,7 +41,7 @@ def setup_style() -> None:
             "axes.labelcolor": INK,
             "axes.spines.top": False,
             "axes.spines.right": False,
-            "axes.prop_cycle": matplotlib.cycler(color=PALETTE),
+            "axes.prop_cycle": cycler(color=PALETTE),
             "xtick.color": INK,
             "ytick.color": INK,
             "legend.frameon": False,
@@ -65,10 +67,15 @@ def save(fig: Figure, out_dir: Path, name: str) -> list[Path]:
 
 # --------------------------------------------------------------------------
 def fig_folk_theorem(pm: PayoffMatrix, out: Path) -> list[Path]:
-    pts = {"(C,C)": (pm.R, pm.R), "(C,D)": (pm.S, pm.T), "(D,C)": (pm.T, pm.S), "(D,D)": (pm.P, pm.P)}
+    pts = {
+        "(C,C)": (pm.R, pm.R),
+        "(C,D)": (pm.S, pm.T),
+        "(D,C)": (pm.T, pm.S),
+        "(D,D)": (pm.P, pm.P),
+    }
     hull = [pts["(C,C)"], pts["(C,D)"], pts["(D,D)"], pts["(D,C)"]]
     fig, ax = plt.subplots(figsize=(5, 4.6))
-    poly = np.array(hull + [hull[0]])
+    poly = np.array([*hull, hull[0]])
     ax.fill(poly[:, 0], poly[:, 1], color=MUTED, alpha=0.18, label="feasible set $F$")
     ax.plot(poly[:, 0], poly[:, 1], color=INK, lw=1)
     # individually rational region: feasible and both payoffs >= P
@@ -106,21 +113,69 @@ def fig_thresholds(res: dict[str, Any], out: Path) -> list[Path]:
     th = res["thresholds"]
     fig, ax = plt.subplots(figsize=(6.2, 4.2))
     ax.plot(d, (1 - d) * np.array(c["V_coop"]), color=COOP, lw=2, label=r"cooperate forever: $R$")
-    ax.plot(d, (1 - d) * np.array(c["V_dev_alld"]), color=DEFECT, lw=2, label=r"defect forever vs Grim/TFT: $(1-\delta)T+\delta P$")
-    ax.plot(d, (1 - d) * np.array(c["V_dev_alt"]), color=ACCENT, lw=2, label=r"alternate vs TFT: $(T+\delta S)/(1+\delta)$")
+    ax.plot(
+        d,
+        (1 - d) * np.array(c["V_dev_alld"]),
+        color=DEFECT,
+        lw=2,
+        label=r"defect forever vs Grim/TFT: $(1-\delta)T+\delta P$",
+    )
+    ax.plot(
+        d,
+        (1 - d) * np.array(c["V_dev_alt"]),
+        color=ACCENT,
+        lw=2,
+        label=r"alternate vs TFT: $(T+\delta S)/(1+\delta)$",
+    )
     for s in res["simulation"]:
         f = 1 - s["delta"]
-        ax.errorbar(s["delta"], f * s["coop_sim"], yerr=2 * f * s["coop_se"], fmt="o", color=COOP, ms=4, capsize=2)
-        ax.errorbar(s["delta"], f * s["alld_sim"], yerr=2 * f * s["alld_se"], fmt="s", color=DEFECT, ms=4, capsize=2)
-        ax.errorbar(s["delta"], f * s["alt_sim"], yerr=2 * f * s["alt_se"], fmt="^", color=ACCENT, ms=4, capsize=2)
+        ax.errorbar(
+            s["delta"],
+            f * s["coop_sim"],
+            yerr=2 * f * s["coop_se"],
+            fmt="o",
+            color=COOP,
+            ms=4,
+            capsize=2,
+        )
+        ax.errorbar(
+            s["delta"],
+            f * s["alld_sim"],
+            yerr=2 * f * s["alld_se"],
+            fmt="s",
+            color=DEFECT,
+            ms=4,
+            capsize=2,
+        )
+        ax.errorbar(
+            s["delta"],
+            f * s["alt_sim"],
+            yerr=2 * f * s["alt_se"],
+            fmt="^",
+            color=ACCENT,
+            ms=4,
+            capsize=2,
+        )
     ax.axvline(th["grim_spe"], color=DEFECT, ls=":", lw=1)
     ax.axvline(th["tft_vs_alternate"], color=ACCENT, ls=":", lw=1)
-    ax.text(th["grim_spe"] + 0.01, 1.3, r"$\delta^*_{\mathrm{Grim}}=%.2f$" % th["grim_spe"], color=DEFECT, fontsize=9)
-    ax.text(th["tft_vs_alternate"] + 0.01, 1.0, r"$\delta^*_{\mathrm{TFT}}=%.2f$" % th["tft_vs_alternate"], color=ACCENT, fontsize=9)
+    ax.text(
+        th["grim_spe"] + 0.01,
+        1.3,
+        rf"$\delta^*_{{\mathrm{{Grim}}}}={th['grim_spe']:.2f}$",
+        color=DEFECT,
+        fontsize=9,
+    )
+    ax.text(
+        th["tft_vs_alternate"] + 0.01,
+        1.0,
+        rf"$\delta^*_{{\mathrm{{TFT}}}}={th['tft_vs_alternate']:.2f}$",
+        color=ACCENT,
+        fontsize=9,
+    )
     ax.set_ylim(0.5, 5.2)
     ax.set_xlabel(r"discount factor $\delta$")
     ax.set_ylabel(r"normalised payoff $(1-\delta)\,V$")
-    ax.set_title("Cooperation vs. deviation (lines: exact; markers: geometric-stopping simulation, $\pm 2$ s.e.)")
+    ax.set_title("Cooperation vs. deviation (lines: exact; markers: simulation, $\\pm 2$ s.e.)")
     ax.legend(loc="upper right")
     return save(fig, out, "thresholds")
 
@@ -140,7 +195,7 @@ def fig_tournament(res: dict[str, Any], out: Path) -> list[Path]:
     ax.axvline(3, color=MUTED, ls="--", lw=1)
     ax.text(3.02, 0.2, "R = 3", color=MUTED, fontsize=8)
     ax.set_xlim(0, 4)
-    sm = plt.cm.ScalarMappable(cmap="RdBu", norm=plt.Normalize(0, 1))
+    sm = plt.cm.ScalarMappable(cmap="RdBu", norm=matplotlib.colors.Normalize(0, 1))
     cb = fig.colorbar(sm, ax=ax, fraction=0.04, pad=0.02)
     cb.set_label("cooperation rate")
     paths += save(fig, out, "tournament_leaderboard")
@@ -156,7 +211,15 @@ def fig_tournament(res: dict[str, Any], out: Path) -> list[Path]:
     ax.grid(False)
     for i in range(len(names)):
         for j in range(len(names)):
-            ax.text(j, i, f"{M[i, j]:.1f}", ha="center", va="center", fontsize=5.5, color="white" if M[i, j] < 3 else "black")
+            ax.text(
+                j,
+                i,
+                f"{M[i, j]:.1f}",
+                ha="center",
+                va="center",
+                fontsize=5.5,
+                color="white" if M[i, j] < 3 else "black",
+            )
     fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02, label="row payoff per round vs column")
     ax.set_title("Pairwise payoff matrix (row vs column), no noise")
     paths += save(fig, out, "tournament_matrix")
@@ -188,7 +251,15 @@ def fig_noise_selfplay(res: dict[str, Any], out: Path) -> list[Path]:
     for k, (nm, d) in enumerate(res["strategies"].items()):
         col = PALETTE[k % len(PALETTE)]
         ax.plot(eps, d["exact"], color=col, lw=2, label=nm)
-        ax.scatter([s["eps"] for s in d["sim"]], [s["sim"] for s in d["sim"]], color=col, s=22, zorder=5, edgecolor="white", lw=0.5)
+        ax.scatter(
+            [s["eps"] for s in d["sim"]],
+            [s["sim"] for s in d["sim"]],
+            color=col,
+            s=22,
+            zorder=5,
+            edgecolor="white",
+            lw=0.5,
+        )
     ax.set_xlabel(r"implementation error rate $\varepsilon$")
     ax.set_ylabel("self-play payoff per round")
     ax.set_title("Exact stationary payoff (lines) vs simulation (dots) in self-play")
@@ -212,21 +283,37 @@ def fig_replicator(res: dict[str, Any], out: Path) -> list[Path]:
         ax.plot(px, py, color=MUTED, lw=0.8, alpha=0.8)
         # arrow at 1/4 of the way
         i = len(px) // 6
-        ax.annotate("", xy=(px[i + 1], py[i + 1]), xytext=(px[i], py[i]), arrowprops={"arrowstyle": "->", "color": MUTED, "lw": 0.8})
+        ax.annotate(
+            "",
+            xy=(px[i + 1], py[i + 1]),
+            xytext=(px[i], py[i]),
+            arrowprops={"arrowstyle": "->", "color": MUTED, "lw": 0.8},
+        )
         fx, fy = _tern(np.array(tr["final"]))
         ax.scatter([fx], [fy], color=COOP if tr["final"][1] < 0.5 else DEFECT, s=10, zorder=4)
     for name, fp in res["fixed_points"].items():
         fx, fy = _tern(np.array(fp, dtype=float))
-        ax.scatter([fx], [fy], color=ACCENT if "edge" in name else INK, s=60, zorder=6, edgecolor="white")
+        ax.scatter(
+            [fx], [fy], color=ACCENT if "edge" in name else INK, s=60, zorder=6, edgecolor="white"
+        )
     ax.text(-0.02, -0.05, "ALLC", ha="center", fontsize=10)
     ax.text(1.02, -0.05, "ALLD", ha="center", fontsize=10)
     ax.text(0.5, np.sqrt(3) / 2 + 0.03, "TFT", ha="center", fontsize=10)
     xs = res["x_star"]
     ex, ey = _tern(np.array([0, 1 - xs, xs]))
-    ax.annotate(rf"$x^*_{{TFT}}={xs:.3f}$", (ex, ey), xytext=(0.62, 0.18), fontsize=9, color=ACCENT, arrowprops={"arrowstyle": "->", "color": ACCENT})
+    ax.annotate(
+        rf"$x^*_{{TFT}}={xs:.3f}$",
+        (ex, ey),
+        xytext=(0.62, 0.18),
+        fontsize=9,
+        color=ACCENT,
+        arrowprops={"arrowstyle": "->", "color": ACCENT},
+    )
     ax.set_aspect("equal")
     ax.axis("off")
-    ax.set_title(rf"Replicator dynamics, $\delta={res['delta']}$: bistability between ALLD and the ALLC–TFT edge")
+    ax.set_title(
+        rf"Replicator dynamics, $\delta={res['delta']}$: bistability: ALLD vs. the ALLC-TFT edge"
+    )
     paths = save(fig, out, "replicator_simplex")
 
     c = res["convergence"]
@@ -234,7 +321,14 @@ def fig_replicator(res: dict[str, Any], out: Path) -> list[Path]:
     t = np.array(c["t"])
     x = np.array(c["x_tft"])
     ax.semilogy(t, x, color=COOP, lw=2, label="$x_{TFT}(t)$ (numerical)")
-    ax.semilogy(t, x[0] * np.exp(c["predicted_rate"] * t), color=DEFECT, ls="--", lw=1.4, label=rf"$e^{{\lambda t}}$, $\lambda={c['predicted_rate']:.3f}$ (Jacobian)")
+    ax.semilogy(
+        t,
+        x[0] * np.exp(c["predicted_rate"] * t),
+        color=DEFECT,
+        ls="--",
+        lw=1.4,
+        label=rf"$e^{{\lambda t}}$, $\lambda={c['predicted_rate']:.3f}$ (Jacobian)",
+    )
     ax.set_xlabel("time")
     ax.set_ylabel("TFT frequency")
     ax.set_title(f"Exponential extinction of TFT below $x^*$; fitted rate {c['fitted_rate']:.3f}")
@@ -243,13 +337,25 @@ def fig_replicator(res: dict[str, Any], out: Path) -> list[Path]:
     return paths
 
 
-def fig_moran(fix: dict[str, Any], mut: dict[str, Any], evo_noise: dict[str, Any], out: Path) -> list[Path]:
+def fig_moran(
+    fix: dict[str, Any], mut: dict[str, Any], evo_noise: dict[str, Any], out: Path
+) -> list[Path]:
     rows = fix["rows"]
     fig, ax = plt.subplots(figsize=(5.6, 3.9))
     N = [r["N"] for r in rows]
-    ax.plot(N, [r["exact"] for r in rows], "-", color=COOP, lw=2, label="exact (Nowak 2006, eq. 6.4)")
+    ax.plot(
+        N, [r["exact"] for r in rows], "-", color=COOP, lw=2, label="exact (Nowak 2006, eq. 6.4)"
+    )
     se = [np.sqrt(r["sim"] * (1 - r["sim"]) / r["runs"]) for r in rows]
-    ax.errorbar(N, [r["sim"] for r in rows], yerr=[2 * s for s in se], fmt="o", color=DEFECT, capsize=3, label=f"simulation ({rows[0]['runs']} runs)")
+    ax.errorbar(
+        N,
+        [r["sim"] for r in rows],
+        yerr=[2 * s for s in se],
+        fmt="o",
+        color=DEFECT,
+        capsize=3,
+        label=f"simulation ({rows[0]['runs']} runs)",
+    )
     ax.plot(N, [r["neutral"] for r in rows], ":", color=MUTED, label="neutral $1/N$")
     ax.set_xlabel("population size $N$")
     ax.set_ylabel("fixation probability of one TFT in ALLD")
@@ -266,7 +372,15 @@ def fig_moran(fix: dict[str, Any], mut: dict[str, Any], evo_noise: dict[str, Any
     bottom = np.zeros(len(mus))
     order = np.argsort(-F.mean(axis=0))
     for k, i in enumerate(order):
-        ax.bar(xs, F[:, i], bottom=bottom, color=PALETTE[k % len(PALETTE)] if k < 8 else MUTED, label=names[i] if k < 8 else None, edgecolor="white", lw=0.3)
+        ax.bar(
+            xs,
+            F[:, i],
+            bottom=bottom,
+            color=PALETTE[k % len(PALETTE)] if k < 8 else MUTED,
+            label=names[i] if k < 8 else None,
+            edgecolor="white",
+            lw=0.3,
+        )
         bottom += F[:, i]
     ax.set_xticks(xs, [str(m) for m in mus])
     ax.set_xlabel(r"mutation rate $\mu$")
@@ -275,13 +389,49 @@ def fig_moran(fix: dict[str, Any], mut: dict[str, Any], evo_noise: dict[str, Any
     ax.legend(ncol=2, fontsize=7, loc="upper right")
     ax = axes[1]
     ax.plot(xs, [r["coop_rate"] for r in mut["rows"]], "-o", color=COOP, label="cooperation rate")
-    ax.plot(xs, [r["mean_payoff"] / 3 for r in mut["rows"]], "-s", color=ACCENT, label="mean payoff / R")
+    ax.plot(
+        xs, [r["mean_payoff"] / 3 for r in mut["rows"]], "-s", color=ACCENT, label="mean payoff / R"
+    )
     ax.set_xticks(xs, [str(m) for m in mus])
     ax.set_xlabel(r"mutation rate $\mu$")
     ax.set_ylim(0, 1.05)
     ax.legend()
     ax.set_title("Does mutation break cooperation?")
     paths += save(fig, out, "moran_mutation")
+
+    th = mut["three"]
+    fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), gridspec_kw={"width_ratios": [1, 1.4]})
+    ax = axes[0]
+    m3 = [r["mu"] for r in th["rows"]]
+    F3 = np.array([r["mean_freq"] for r in th["rows"]])
+    for k, nm in enumerate(th["names"]):
+        ax.plot(m3, F3[:, k], "-o", ms=4, color=[COOP, DEFECT, ACCENT][k], label=nm)
+    ax.plot(
+        m3, [r["coop_rate"] for r in th["rows"]], "--", color=INK, lw=1, label="cooperation rate"
+    )
+    ax.set_xscale("symlog", linthresh=0.001)
+    ax.set_xlabel(r"mutation rate $\mu$")
+    ax.set_ylabel("time-averaged frequency")
+    ax.set_title(f"ALLC / ALLD / TFT, Moran N={mut['N']}, start all-TFT")
+    ax.legend(fontsize=8)
+    ax = axes[1]
+    pick = [r for r in th["rows"] if r["mu"] in (0.01, 0.1)]
+    for r, ls in zip(pick, ("-", ":"), strict=False):
+        X = np.array(r["series_stride"])
+        for k, nm in enumerate(th["names"]):
+            ax.plot(
+                np.linspace(0, 1, len(X)),
+                X[:, k],
+                ls,
+                color=[COOP, DEFECT, ACCENT][k],
+                lw=1,
+                label=f"{nm} ($\\mu$={r['mu']})",
+            )
+    ax.set_xlabel("time (fraction of run)")
+    ax.set_ylabel("frequency")
+    ax.set_title("Mutation-driven cycles: ALLC drifts in, ALLD invades, TFT restores")
+    ax.legend(fontsize=7, ncol=2)
+    paths += save(fig, out, "moran_three")
 
     names = evo_noise["names"]
     eps = [r["eps"] for r in evo_noise["rows"]]
@@ -291,7 +441,15 @@ def fig_moran(fix: dict[str, Any], mut: dict[str, Any], evo_noise: dict[str, Any
     bottom = np.zeros(len(eps))
     order = np.argsort(-F.mean(axis=0))
     for k, i in enumerate(order):
-        ax.bar(xs, F[:, i], bottom=bottom, color=PALETTE[k % len(PALETTE)] if k < 8 else MUTED, label=names[i] if k < 8 else None, edgecolor="white", lw=0.3)
+        ax.bar(
+            xs,
+            F[:, i],
+            bottom=bottom,
+            color=PALETTE[k % len(PALETTE)] if k < 8 else MUTED,
+            label=names[i] if k < 8 else None,
+            edgecolor="white",
+            lw=0.3,
+        )
         bottom += F[:, i]
     ax.set_xticks(xs, [str(e) for e in eps])
     ax.set_xlabel(r"implementation noise $\varepsilon$")
@@ -314,8 +472,23 @@ def fig_spatial(res: dict[str, Any], out: Path) -> list[Path]:
     ph = res["phase"]
     fig, ax = plt.subplots(figsize=(6, 3.8))
     b = [r["b"] for r in ph]
-    ax.errorbar(b, [r["coop_mean"] for r in ph], yerr=[r["coop_sd"] for r in ph], fmt="-o", color=COOP, ms=4, capsize=2, label="simulation (mean of seeds)")
-    ax.axhline(res["b_star_published"], color=DEFECT, ls="--", lw=1, label="Nowak & May (1992): 0.318 for 1.8<b<2")
+    ax.errorbar(
+        b,
+        [r["coop_mean"] for r in ph],
+        yerr=[r["coop_sd"] for r in ph],
+        fmt="-o",
+        color=COOP,
+        ms=4,
+        capsize=2,
+        label="simulation (mean of seeds)",
+    )
+    ax.axhline(
+        res["b_star_published"],
+        color=DEFECT,
+        ls="--",
+        lw=1,
+        label="Nowak & May (1992): 0.318 for 1.8<b<2",
+    )
     ax.axvspan(1.8, 2.0, color=ACCENT, alpha=0.12)
     ax.set_xlabel("temptation $b$")
     ax.set_ylabel("asymptotic cooperator fraction $f_C$")
@@ -330,7 +503,9 @@ def fig_spatial(res: dict[str, Any], out: Path) -> list[Path]:
     every = max(1, steps // 6)
     for k in range(n):
         _show_grid(axes[k], snaps[k], f"t = {k * every}")
-    fig.suptitle("Kaleidoscope: one defector in a sea of cooperators, b = 1.9, fixed boundary", fontsize=10)
+    fig.suptitle(
+        "Kaleidoscope: one defector in a sea of cooperators, b = 1.9, fixed boundary", fontsize=10
+    )
     paths += save(fig, out, "spatial_kaleidoscope")
 
     snaps = res["snapshots_b1p9"]
@@ -338,7 +513,9 @@ def fig_spatial(res: dict[str, Any], out: Path) -> list[Path]:
     fig, axes = plt.subplots(1, n, figsize=(2.3 * n, 2.5))
     for k in range(n):
         _show_grid(axes[k], snaps[k], f"t = {k * every}")
-    fig.suptitle("Random start (90% C), b = 1.9: spatial chaos with $f_C \\approx 0.32$", fontsize=10)
+    fig.suptitle(
+        "Random start (90% C), b = 1.9: spatial chaos with $f_C \\approx 0.32$", fontsize=10
+    )
     paths += save(fig, out, "spatial_snapshots")
 
     sa = res["sync_vs_async"]
@@ -368,12 +545,33 @@ def fig_zd(res: dict[str, Any], pm: PayoffMatrix, out: Path) -> list[Path]:
     sc = res["scatter"]
     rnd = [s for s in sc if s["opponent"] == "random"]
     nam = [s for s in sc if s["opponent"] != "random"]
-    ax.scatter([s["s_Y"] for s in rnd], [s["s_X"] for s in rnd], color=MUTED, s=16, label="random memory-one opponents")
-    ax.scatter([s["s_Y"] for s in nam], [s["s_X"] for s in nam], color=DEFECT, s=34, zorder=5, label="named strategies")
+    ax.scatter(
+        [s["s_Y"] for s in rnd],
+        [s["s_X"] for s in rnd],
+        color=MUTED,
+        s=16,
+        label="random memory-one opponents",
+    )
+    ax.scatter(
+        [s["s_Y"] for s in nam],
+        [s["s_X"] for s in nam],
+        color=DEFECT,
+        s=34,
+        zorder=5,
+        label="named strategies",
+    )
     for s in nam:
-        ax.annotate(s["opponent"], (s["s_Y"], s["s_X"]), textcoords="offset points", xytext=(4, 3), fontsize=7)
+        ax.annotate(
+            s["opponent"],
+            (s["s_Y"], s["s_X"]),
+            textcoords="offset points",
+            xytext=(4, 3),
+            fontsize=7,
+        )
     y = np.linspace(pm.P, 2.3, 50)
-    ax.plot(y, pm.P + chi * (y - pm.P), color=COOP, lw=1.5, label=rf"$s_X - P = {chi:g}\,(s_Y - P)$")
+    ax.plot(
+        y, pm.P + chi * (y - pm.P), color=COOP, lw=1.5, label=rf"$s_X - P = {chi:g}\,(s_Y - P)$"
+    )
     ax.set_xlabel("opponent payoff $s_Y$")
     ax.set_ylabel("Extort-2 payoff $s_X$")
     ax.set_title("Extort-2 pins every opponent to a line")
@@ -418,7 +616,7 @@ def make_gif(frames: Sequence[np.ndarray], path: Path, fps: int = 8) -> None:
     for f in frames:
         f = np.asarray(f).astype(int)
         img = np.where(f[..., None] == 1, rgb[1], rgb[0]).astype(np.uint8)
-        im = Image.fromarray(img).resize((400, 400), Image.NEAREST)
+        im = Image.fromarray(img).resize((400, 400), Image.Resampling.NEAREST)
         imgs.append(np.asarray(im))
     path.parent.mkdir(parents=True, exist_ok=True)
     iio.imwrite(path, imgs, duration=1000 / fps, loop=0)

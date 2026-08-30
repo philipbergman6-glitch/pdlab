@@ -37,7 +37,12 @@ class OneShotFacts:
     @property
     def is_dilemma(self) -> bool:
         return all(
-            (self.d_dominant, self.dd_unique_nash, self.cc_pareto_dominates_dd, self.cc_beats_alternation)
+            (
+                self.d_dominant,
+                self.dd_unique_nash,
+                self.cc_pareto_dominates_dd,
+                self.cc_beats_alternation,
+            )
         )
 
 
@@ -138,11 +143,8 @@ class Thresholds:
     def tft_is_spe_possible(self) -> bool:
         """True iff some delta in [0,1) satisfies every TFT one-shot-deviation condition."""
         d = self.tft_vs_alternate
-        return (
-            0 <= d < 1
-            and d >= self.tft_vs_alld
-            and d <= self.tft_after_dd_max
-        )
+        tol = 1e-9
+        return 0 <= d < 1 and d >= self.tft_vs_alld - tol and d <= self.tft_after_dd_max + tol
 
 
 def thresholds(pm: PayoffMatrix) -> Thresholds:
@@ -250,7 +252,7 @@ def jacobian_eigenvalues(x: NDArray[np.float64], A: NDArray[np.float64]) -> NDAr
         e = np.zeros(2)
         e[k] = h
         J[:, k] = (g(y0 + e) - g(y0 - e)) / (2 * h)
-    return np.linalg.eigvals(J)
+    return np.asarray(np.linalg.eigvals(J), dtype=np.complex128)
 
 
 def jacobian_eigenvalues_symbolic(point: str) -> list[sp.Expr]:
@@ -319,7 +321,7 @@ def stationary_payoffs_symbolic(
         a, b = px[s], qy[s]
         M[s, 0], M[s, 1], M[s, 2], M[s, 3] = a * b, a * (1 - b), (1 - a) * b, (1 - a) * (1 - b)
     v = sp.Matrix(sp.symbols("v0:4"))
-    eqs = list(M.T * v - v)[:3] + [sum(v) - 1]
+    eqs = [*list(M.T * v - v)[:3], sum(v) - 1]
     sol = sp.solve(eqs, list(v), dict=True)
     if len(sol) != 1:
         raise ValueError("stationary distribution not unique")

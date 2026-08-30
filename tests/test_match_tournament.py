@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pdlab.game import C, D, PayoffMatrix
+from pdlab.game import C, PayoffMatrix
 from pdlab.match import play_match
 from pdlab.strategies import REGISTRY
 from pdlab.tournament import round_robin

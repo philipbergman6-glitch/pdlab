@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from pdlab.game import C, D, STATES, Move, PayoffMatrix, state_index
+from pdlab.game import STATES, C, D, Move, PayoffMatrix, state_index
 
 FINITE = st.floats(min_value=-50, max_value=50, allow_nan=False, allow_infinity=False, width=32)
 
@@ -120,7 +120,7 @@ def test_donation_is_always_a_strict_pd(c, extra):
     """b > c > 0 implies 2R - (T + S) = b - c > 0, so validation never fires."""
     pm = PayoffMatrix.donation(b=c + extra, c=c)
     assert pm.is_strict()
-    assert 2 * pm.R - (pm.T + pm.S) == pytest.approx(extra)
+    assert pytest.approx(extra) == 2 * pm.R - (pm.T + pm.S)
 
 
 def test_move_flip_and_str():

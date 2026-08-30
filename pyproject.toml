@@ -64,7 +64,7 @@ ignore = ["RUF012", "N806", "N803", "E741"]
 python_version = "3.11"
 strict = true
 warn_unreachable = true
-plugins = ["numpy.typing.mypy_plugin"]
+
 files = ["src/pdlab"]
 [[tool.mypy.overrides]]
 module = ["scipy.*", "matplotlib.*", "sympy.*", "imageio.*"]

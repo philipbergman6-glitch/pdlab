@@ -48,7 +48,7 @@ class Scale:
     async_lattice: int = 50
     async_steps: int = 100
     moran_runs: int = 2000
-    moran_N: int = 50
+    moran_n: int = 50
     moran_steps: int = 500_000
     learner_rounds: int = 30_000
     learner_seeds: int = 5
@@ -73,7 +73,7 @@ class Scale:
             async_lattice=10,
             async_steps=5,
             moran_runs=50,
-            moran_N=10,
+            moran_n=10,
             moran_steps=2000,
             learner_rounds=600,
             learner_seeds=1,
@@ -81,6 +81,11 @@ class Scale:
             delta_grid=6,
             eps_grid=4,
         )
+
+
+def _result(x: dict[str, Any]) -> Result:
+    out: Result = _f(x)
+    return out
 
 
 def _f(x: Any) -> Any:
@@ -103,7 +108,7 @@ def _f(x: Any) -> Any:
 # --------------------------------------------------------------------------
 def exp_one_shot(pm: PayoffMatrix) -> Result:
     facts = analytic.one_shot_facts(pm)
-    return _f(
+    return _result(
         {
             "payoffs": dict(zip("TRPS", pm.as_tuple(), strict=True)),
             "matrix_row_player": pm.as_matrix(),
@@ -119,11 +124,16 @@ def exp_finite(pm: PayoffMatrix, n_max: int = 10) -> Result:
     for n in range(1, n_max + 1):
         path, total = backward_induction(pm, n)
         rows.append({"n": n, "all_defect": all(p == (1, 1) for p in path), "row_total": total})
-    return _f({"rows": rows})
+    return _result({"rows": rows})
 
 
 def simulate_discounted_total(
-    s1: Strategy, s2: Strategy, delta: float, n_matches: int, pm: PayoffMatrix, rng: np.random.Generator
+    s1: Strategy,
+    s2: Strategy,
+    delta: float,
+    n_matches: int,
+    pm: PayoffMatrix,
+    rng: np.random.Generator,
 ) -> tuple[float, float]:
     """Mean *unnormalised* total payoff of player 1 with geometric stopping (continuation delta)."""
     if not 0 <= delta < 1:
@@ -173,7 +183,7 @@ def exp_thresholds(pm: PayoffMatrix, scale: Scale, seed: int = 1) -> Result:
             }
         )
     spe = analytic.tft_spe_conditions_symbolic()
-    return _f(
+    return _result(
         {
             "thresholds": asdict(th),
             "tft_is_spe_possible": th.tft_is_spe_possible,
@@ -204,7 +214,7 @@ def exp_tournament(pm: PayoffMatrix, scale: Scale, seed: int = 2) -> Result:
             out["payoff_matrix"] = {"names": list(res.names), "values": res.mean_payoff}
             out["coop_matrix"] = res.coop.mean(axis=0)
     out["leaderboards"] = boards
-    return _f(out)
+    return _result(out)
 
 
 # --------------------------------------------------------------------------
@@ -225,17 +235,30 @@ def exp_noise_selfplay(pm: PayoffMatrix, scale: Scale, seed: int = 3) -> Result:
             r = play_match(s.clone(), s.clone(), scale.noise_sim_rounds, pm, rng, noise=e)
             sims.append({"eps": e, "sim": (r.mean1 + r.mean2) / 2})
         sym = analytic.self_play_noise_symbolic(tuple(sp.nsimplify(v) for v in p))
-        series = sp.series(sym.subs({analytic.T: pm.T, analytic.R: pm.R, analytic.P: pm.P, analytic.S: pm.S}), analytic.eps, 0, 2).removeO()
+        series = sp.series(
+            sym.subs({analytic.T: pm.T, analytic.R: pm.R, analytic.P: pm.P, analytic.S: pm.S}),
+            analytic.eps,
+            0,
+            2,
+        ).removeO()
         out["strategies"][name] = {
             "p": p,
             "exact": exact,
             "sim": sims,
             "symbolic": sp.factor(sym),
             "series_axelrod": series,
-            "eps0_limit": float(sp.limit(sym.subs({analytic.T: pm.T, analytic.R: pm.R, analytic.P: pm.P, analytic.S: pm.S}), analytic.eps, 0)),
+            "eps0_limit": float(
+                sp.limit(
+                    sym.subs(
+                        {analytic.T: pm.T, analytic.R: pm.R, analytic.P: pm.P, analytic.S: pm.S}
+                    ),
+                    analytic.eps,
+                    0,
+                )
+            ),
             "noiseless": float(stationary_payoffs(p, p, pm, 1e-9)[0]),
         }
-    return _f(out)
+    return _result(out)
 
 
 # --------------------------------------------------------------------------
@@ -269,7 +292,7 @@ def exp_replicator(pm: PayoffMatrix, delta: float = 0.9, t_max: float = 60.0) ->
     slope = float(np.polyfit(tr.t[mask], np.log(tr.x[mask, 2]), 1)[0])
     ess = {analytic.STRATS3[i]: analytic.is_ess(A, i) for i in range(3)}
     nss = {analytic.STRATS3[i]: analytic.is_neutrally_stable(A, i) for i in range(3)}
-    return _f(
+    return _result(
         {
             "delta": delta,
             "A": A,
@@ -312,27 +335,29 @@ def exp_moran_fixation(pm: PayoffMatrix, scale: Scale, delta: float = 0.9, seed:
             if r.fixated == 2:
                 wins += 1
         rows.append({"N": N, "exact": exact, "neutral": neutral, "sim": wins / runs, "runs": runs})
-    return _f({"delta": delta, "rows": rows})
+    return _result({"delta": delta, "rows": rows})
 
 
 def _dominant(freqs: np.ndarray, names: list[str]) -> str:
     return names[int(np.argmax(freqs))]
 
 
-def exp_moran_mutation(tournament: Result, scale: Scale, seed: int = 6) -> Result:
+def exp_moran_mutation(tournament: Result, scale: Scale, pm: PayoffMatrix, seed: int = 6) -> Result:
     """Long-run Moran process over the full strategy set with mutation."""
     names: list[str] = tournament["payoff_matrix"]["names"]
     A = np.array(tournament["payoff_matrix"]["values"])
     coopM = np.array(tournament["coop_matrix"])
     n = len(names)
-    N = scale.moran_N
+    N = scale.moran_n
     mus = [0.0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3]
     rows = []
     for mu in mus:
         rng = np.random.default_rng(seed)
         counts = np.full(n, N // n)
         counts[0] += N - counts.sum()
-        r = moran_process(A, counts, scale.moran_steps, rng, w=1.0, mutation=mu, stop_at_fixation=False)
+        r = moran_process(
+            A, counts, scale.moran_steps, rng, w=1.0, mutation=mu, stop_at_fixation=False
+        )
         f = r.frequencies[len(r.frequencies) // 2 :]  # discard burn-in
         mean_f = f.mean(axis=0)
         mean_payoff = float(mean_f @ A @ mean_f)
@@ -346,7 +371,38 @@ def exp_moran_mutation(tournament: Result, scale: Scale, seed: int = 6) -> Resul
                 "coop_rate": coop,
             }
         )
-    return _f({"names": names, "N": N, "rows": rows})
+    # the classic three-strategy case: ALLC / ALLD / TFT in the discounted game
+    A3 = analytic.payoff_matrix_3(pm, 0.9)
+    # long-run cooperation rate of row vs column: TFT vs ALLD cooperates once then never
+    coop3 = np.array([[1.0, 1.0, 1.0], [0.0, 0.0, 0.0], [1.0, 0.0, 1.0]])
+    rows3 = []
+    mus3 = [0.0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.2, 0.3, 0.4, 0.5]
+    for mu in mus3:
+        rng = np.random.default_rng(seed + 1)
+        counts = np.array([0, 0, N])  # start from all-TFT (the cooperative equilibrium)
+        r = moran_process(
+            A3, counts, scale.moran_steps, rng, w=1.0, mutation=mu, stop_at_fixation=False
+        )
+        f = r.frequencies[len(r.frequencies) // 4 :]
+        mean_f = f.mean(axis=0)
+        rows3.append(
+            {
+                "mu": mu,
+                "mean_freq": mean_f,
+                "coop_rate": float(mean_f @ coop3 @ mean_f),
+                "mean_payoff": float(mean_f @ A3 @ mean_f),
+                "frac_time_alld_majority": float((f[:, 1] > 0.5).mean()),
+                "series_stride": r.frequencies[:: max(1, len(r.frequencies) // 2000)],
+            }
+        )
+    return _result(
+        {
+            "names": names,
+            "N": N,
+            "rows": rows,
+            "three": {"names": list(analytic.STRATS3), "A": A3, "rows": rows3},
+        }
+    )
 
 
 def exp_evolution_noise(pm: PayoffMatrix, scale: Scale, seed: int = 7) -> Result:
@@ -356,16 +412,27 @@ def exp_evolution_noise(pm: PayoffMatrix, scale: Scale, seed: int = 7) -> Result
     eps_levels = [0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15]
     rows = []
     for k, e in enumerate(eps_levels):
-        res = round_robin(strategies, scale.rounds, pm, noise=e, reps=max(1, scale.reps // 2), seed=seed + k)
+        res = round_robin(
+            strategies, scale.rounds, pm, noise=e, reps=max(1, scale.reps // 2), seed=seed + k
+        )
         A = res.mean_payoff
         rng = np.random.default_rng(seed)
         n = len(names)
-        counts = np.full(n, scale.moran_N // n)
-        counts[0] += scale.moran_N - counts.sum()
-        r = moran_process(A, counts, scale.moran_steps, rng, w=1.0, mutation=0.01, stop_at_fixation=False)
+        counts = np.full(n, scale.moran_n // n)
+        counts[0] += scale.moran_n - counts.sum()
+        r = moran_process(
+            A, counts, scale.moran_steps, rng, w=1.0, mutation=0.01, stop_at_fixation=False
+        )
         f = r.frequencies[len(r.frequencies) // 2 :].mean(axis=0)
-        rows.append({"eps": e, "mean_freq": f, "dominant": _dominant(f, names), "mean_payoff": float(f @ A @ f)})
-    return _f({"names": names, "rows": rows})
+        rows.append(
+            {
+                "eps": e,
+                "mean_freq": f,
+                "dominant": _dominant(f, names),
+                "mean_payoff": float(f @ A @ f),
+            }
+        )
+    return _result({"names": names, "rows": rows})
 
 
 # --------------------------------------------------------------------------
@@ -382,7 +449,9 @@ def exp_spatial(scale: Scale, seed: int = 8) -> Result:
             g = SpatialPD.random(scale.lattice, float(b), 0.9, rng)
             ser, _ = g.run(scale.lattice_steps)
             vals.append(ser[-tail:].mean())
-        phase.append({"b": float(b), "coop_mean": float(np.mean(vals)), "coop_sd": float(np.std(vals))})
+        phase.append(
+            {"b": float(b), "coop_mean": float(np.mean(vals)), "coop_sd": float(np.std(vals))}
+        )
     # time series & snapshots at b = 1.9
     rng = np.random.default_rng(seed)
     g = SpatialPD.random(scale.lattice, 1.9, 0.9, rng)
@@ -404,12 +473,16 @@ def exp_spatial(scale: Scale, seed: int = 8) -> Result:
     sync_ser, _ = a_sync.run(scale.async_steps)
     rng = np.random.default_rng(seed)
     a_async = SpatialPD.random(scale.async_lattice, 1.9, 0.9, rng)
-    async_ser, _ = a_async.run(scale.async_steps, rng=np.random.default_rng(seed + 1), asynchronous=True)
-    return _f(
+    async_ser, _ = a_async.run(
+        scale.async_steps, rng=np.random.default_rng(seed + 1), asynchronous=True
+    )
+    return _result(
         {
             "phase": phase,
             "b_star_published": 0.318,
-            "coop_1p8_2": float(np.mean([r["coop_mean"] for r in phase if 1.8 < r["b"] < 2.0])) if any(1.8 < r["b"] < 2 for r in phase) else None,
+            "coop_1p8_2": float(np.mean([r["coop_mean"] for r in phase if 1.8 < r["b"] < 2.0]))
+            if any(1.8 < r["b"] < 2 for r in phase)
+            else None,
             "series_b1p9": series,
             "snapshots_b1p9": [s.astype(int) for s in snaps],
             "kaleidoscope_series": kser,
@@ -445,8 +518,8 @@ def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
     for k in range(scale.learner_seeds):
         rng = np.random.default_rng(seed + 10 + k)
         for opp_name, opp in (("EXTORT2", ext), ("ZDGTFT2", gen), ("TFT", REGISTRY.make("TFT"))):
-            q = QLearner(alpha=0.05, gamma=0.9, explore=0.2, explore_decay=0.9997, persist=True)
-            res = play_match(q, opp.clone(), scale.learner_rounds, pm, rng)
+            ql = QLearner(alpha=0.05, gamma=0.9, explore=0.2, explore_decay=0.9997, persist=True)
+            res = play_match(ql, opp.clone(), scale.learner_rounds, pm, rng)
             w = max(1, scale.learner_rounds // 100)
             m1 = np.array([pm.payoff(a, b) for a, b in zip(res.moves1, res.moves2, strict=True)])
             m2 = np.array([pm.payoff(b, a) for a, b in zip(res.moves1, res.moves2, strict=True)])
@@ -462,7 +535,7 @@ def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
                     "learner_coop": coop[: nb * w].reshape(nb, w).mean(axis=1),
                     "final_learner": float(m1[-len(m1) // 5 :].mean()),
                     "final_opponent": float(m2[-len(m2) // 5 :].mean()),
-                    "final_policy": q.greedy_policy(),
+                    "final_policy": ql.greedy_policy(),
                 }
             )
     # (c) evolution among memory-one strategies incl. ZD (exact payoffs, small noise)
@@ -477,11 +550,13 @@ def exp_zd(pm: PayoffMatrix, scale: Scale, seed: int = 9) -> Result:
     x0 = np.full(n, 1 / n)
     tr = replicator_trajectory(A, x0, 300.0, n_points=300)
     rng = np.random.default_rng(seed)
-    counts = np.full(n, scale.moran_N // n)
-    counts[0] += scale.moran_N - counts.sum()
-    mr = moran_process(A, counts, scale.moran_steps, rng, w=1.0, mutation=0.01, stop_at_fixation=False)
+    counts = np.full(n, scale.moran_n // n)
+    counts[0] += scale.moran_n - counts.sum()
+    mr = moran_process(
+        A, counts, scale.moran_steps, rng, w=1.0, mutation=0.01, stop_at_fixation=False
+    )
     mf = mr.frequencies[len(mr.frequencies) // 2 :].mean(axis=0)
-    return _f(
+    return _result(
         {
             "extort2": ext.memory_one,
             "zdgtft2": gen.memory_one,
@@ -512,7 +587,7 @@ def run_all(scale: Scale, pm: PayoffMatrix | None = None) -> Result:
     out["noise_selfplay"] = exp_noise_selfplay(pm, scale)
     out["replicator"] = exp_replicator(pm)
     out["moran_fixation"] = exp_moran_fixation(pm, scale)
-    out["moran_mutation"] = exp_moran_mutation(out["tournament"], scale)
+    out["moran_mutation"] = exp_moran_mutation(out["tournament"], scale, pm)
     out["evolution_noise"] = exp_evolution_noise(pm, scale)
     out["spatial"] = exp_spatial(scale)
     out["zd"] = exp_zd(pm, scale)

@@ -11,20 +11,25 @@ from pdlab.experiments import Scale
 from pdlab.game import PayoffMatrix
 
 app = typer.Typer(help="Prisoner's Dilemma laboratory", no_args_is_help=True)
+ROOT_OPT = typer.Option(Path("."), help="project root (results/ and figures/ go here)")
+QUICK_OPT = typer.Option(False, help="tiny scale for smoke tests")
+NO_HERO_OPT = typer.Option(False, help="skip the README GIF")
 
 
 @app.command()
 def reproduce(
-    root: Path = typer.Option(Path("."), help="project root (results/ and figures/ go here)"),
-    quick: bool = typer.Option(False, help="tiny scale for smoke tests"),
-    no_hero: bool = typer.Option(False, help="skip the README GIF"),
+    root: Path = ROOT_OPT,
+    quick: bool = QUICK_OPT,
+    no_hero: bool = NO_HERO_OPT,
 ) -> None:
     """Regenerate results/canonical.json, tables and every figure from scratch."""
     from pdlab.reproduce import reproduce as _run
 
     scale = Scale.quick() if quick else Scale.full()
     res = _run(root, scale, hero=not no_hero)
-    typer.echo(f"done in {res['elapsed_total_s']:.1f}s -> {root / 'results'} and {root / 'figures'}")
+    typer.echo(
+        f"done in {res['elapsed_total_s']:.1f}s -> {root / 'results'} and {root / 'figures'}"
+    )
 
 
 @app.command()
@@ -66,9 +71,13 @@ def play(
     from pdlab.strategies import REGISTRY
 
     rng = np.random.default_rng(seed)
-    res = play_match(REGISTRY.make(me), REGISTRY.make(opponent), rounds, PayoffMatrix.axelrod(), rng, noise)
+    res = play_match(
+        REGISTRY.make(me), REGISTRY.make(opponent), rounds, PayoffMatrix.axelrod(), rng, noise
+    )
     typer.echo(f"{me:>8s}: " + "".join(m.value for m in res.moves1) + f"  score {res.score1:g}")
-    typer.echo(f"{opponent:>8s}: " + "".join(m.value for m in res.moves2) + f"  score {res.score2:g}")
+    typer.echo(
+        f"{opponent:>8s}: " + "".join(m.value for m in res.moves2) + f"  score {res.score2:g}"
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

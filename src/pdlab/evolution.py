@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +13,8 @@ from scipy.integrate import solve_ivp
 from pdlab.analytic import replicator_rhs
 
 FArr = NDArray[np.float64]
+Vector = Sequence[float] | NDArray[np.floating[Any]]
+IntVector = Sequence[int] | NDArray[np.integer[Any]]
 
 
 def _check_matrix(A: FArr) -> FArr:
@@ -23,11 +26,11 @@ def _check_matrix(A: FArr) -> FArr:
     return A
 
 
-def _check_simplex(x: Sequence[float], n: int) -> FArr:
-    x = np.asarray(x, dtype=float)
-    if x.shape != (n,) or np.any(x < 0) or not np.isclose(x.sum(), 1.0, atol=1e-9):
-        raise ValueError(f"x must be a probability vector of length {n}, got {x}")
-    return x / x.sum()
+def _check_simplex(x: Vector, n: int) -> FArr:
+    arr = np.asarray(x, dtype=float)
+    if arr.shape != (n,) or np.any(arr < 0) or not np.isclose(arr.sum(), 1.0, atol=1e-9):
+        raise ValueError(f"x must be a probability vector of length {n}, got {arr}")
+    return np.asarray(arr / arr.sum(), dtype=float)
 
 
 @dataclass(frozen=True)
@@ -37,7 +40,7 @@ class Trajectory:
 
 
 def replicator_trajectory(
-    A: FArr, x0: Sequence[float], t_max: float, n_points: int = 400, rtol: float = 1e-9
+    A: FArr, x0: Vector, t_max: float, n_points: int = 400, rtol: float = 1e-9
 ) -> Trajectory:
     """Integrate the replicator ODE dx_i/dt = x_i ((Ax)_i - x.Ax)."""
     A = _check_matrix(A)
@@ -55,9 +58,7 @@ def replicator_trajectory(
     return Trajectory(sol.t, x)
 
 
-def replicator_discrete(
-    A: FArr, x0: Sequence[float], generations: int, mutation: float = 0.0
-) -> FArr:
+def replicator_discrete(A: FArr, x0: Vector, generations: int, mutation: float = 0.0) -> FArr:
     """Discrete-time replicator map with uniform mutation (needs positive payoffs)."""
     A = _check_matrix(A)
     n = A.shape[0]
@@ -93,7 +94,7 @@ class MoranResult:
 
 def moran_process(
     A: FArr,
-    counts0: Sequence[int],
+    counts0: IntVector,
     steps: int,
     rng: np.random.Generator,
     w: float = 1.0,

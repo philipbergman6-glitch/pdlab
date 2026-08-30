@@ -1,0 +1,1538 @@
+<!doctype html>
+<!--
+  pdlab bench — design tokens
+  ---------------------------------------------------------------------------
+  colour   cooperator lapis #2A6F97 · defector brick #C9463D · brass #E0A458
+           ink #1F2933 · muted #8A94A6
+           light ground "graph paper" #F7F8F4, grid rgba(31,41,51,.06) @24px
+           dark  ground "blackboard slate" #161C26, grid rgba(255,255,255,.05),
+                 ink #E6E9EE.  lapis/brick are semantic: identical in both themes.
+  type     display  "Bricolage Grotesque" 600-800 (wdth axis: 125 hero, 85 titles)
+                    -> "Avenir Next Condensed", "Arial Narrow", sans-serif
+           body     "IBM Plex Sans" -> -apple-system, "Helvetica Neue", sans-serif
+           data     "IBM Plex Mono" tabular-nums -> "SF Mono", Menlo, monospace
+  scale    hero clamp(64,10vw,96) · section 28 · body 16 · caption 13
+  motion   one orchestrated moment: matrix cells write in (60ms stagger) and the
+           tournament bars race once on first view.  Everything else is instant.
+           prefers-reduced-motion collapses both to their end state.
+  ---------------------------------------------------------------------------
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Prisoner's Dilemma bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..125,600..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --lapis:#2A6F97; --brick:#C9463D; --brass:#E0A458;
+  --ink:#1F2933; --muted:#8A94A6;
+  --ground:#F7F8F4; --panel:#FFFFFF; --grid:rgba(31,41,51,.06);
+  --line:rgba(31,41,51,.14); --line-strong:rgba(31,41,51,.28);
+  --shade:rgba(31,41,51,.04);
+  --display:"Bricolage Grotesque","Avenir Next Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  --mono:"IBM Plex Mono","SF Mono",Menlo,monospace;
+}
+:root:not([data-theme="light"]) { color-scheme: light; }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E6E9EE; --muted:#8A94A6;
+    --ground:#161C26; --panel:#1D2531; --grid:rgba(255,255,255,.05);
+    --line:rgba(255,255,255,.14); --line-strong:rgba(255,255,255,.30);
+    --shade:rgba(255,255,255,.05);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E6E9EE; --muted:#8A94A6;
+  --ground:#161C26; --panel:#1D2531; --grid:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.14); --line-strong:rgba(255,255,255,.30);
+  --shade:rgba(255,255,255,.05);
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background-color:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.55;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+h1,h2,h3{font-family:var(--display); font-weight:700; margin:0; line-height:1.05}
+h2{font-size:28px; letter-spacing:-.01em; font-variation-settings:"wdth" 85}
+h3{font-size:17px; font-variation-settings:"wdth" 90; letter-spacing:.01em}
+p{margin:0 0 .7em}
+a{color:var(--lapis)}
+a:hover{text-decoration-thickness:2px}
+.mono,code,.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+.cap{font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:.01em}
+.coop{color:var(--lapis)} .defect{color:var(--brick)}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px; border-radius:2px}
+button,select,input{font:inherit; color:inherit}
+button{background:var(--panel); border:1px solid var(--line); border-radius:3px;
+  padding:.42em .8em; cursor:pointer}
+button:hover{border-color:var(--line-strong)}
+button[aria-pressed="true"],button.on{background:var(--ink); color:var(--ground); border-color:var(--ink)}
+button:disabled{opacity:.45; cursor:not-allowed}
+select{background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:.4em .5em}
+input[type=range]{accent-color:var(--lapis); width:100%; max-width:280px}
+.skip{position:absolute; left:-9999px}
+.skip:focus{left:8px; top:8px; z-index:9; background:var(--panel); padding:.5em .8em; border:1px solid var(--line)}
+
+/* ---- shell ------------------------------------------------------------ */
+.wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+.topbar{display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+  padding:18px 0 0}
+.topbar .brand{font-family:var(--mono); font-size:13px; color:var(--muted)}
+.layout{display:grid; grid-template-columns:210px minmax(0,1fr); gap:36px; align-items:start;
+  padding-bottom:60px}
+.rail{position:sticky; top:18px; padding-top:8px; border-right:1px solid var(--line)}
+.rail ol{list-style:none; margin:0; padding:0 12px 0 0}
+.rail li{margin:0 0 2px}
+.rail a{display:block; padding:5px 0; font-size:14px; color:var(--muted);
+  text-decoration:none; border-bottom:1px solid transparent}
+.rail a:hover{color:var(--ink); border-bottom-color:var(--line-strong)}
+.rail a[aria-current="true"]{color:var(--ink); font-weight:600}
+.rail a[aria-current="true"]::before{content:""; display:inline-block; width:6px; height:6px;
+  background:var(--brass); margin-right:7px; vertical-align:middle}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr; gap:18px}
+  .rail{position:static; border-right:0; border-bottom:1px solid var(--line); padding-bottom:8px}
+  .rail ol{display:flex; flex-wrap:wrap; gap:4px 14px; padding:0}
+}
+
+/* ---- hero ------------------------------------------------------------- */
+.hero{padding:26px 0 10px}
+.hero h1{font-size:clamp(64px,10vw,96px); font-variation-settings:"wdth" 125; letter-spacing:-.03em}
+.hero h1 .small{display:block; font-size:clamp(20px,3vw,26px); font-variation-settings:"wdth" 90;
+  font-weight:600; letter-spacing:0; color:var(--muted); margin-bottom:.15em}
+.hero .lede{max-width:52ch; margin-top:14px}
+.hero-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:32px; align-items:start;
+  margin-top:22px}
+@media (max-width:820px){.hero-grid{grid-template-columns:1fr}}
+
+/* payoff instrument */
+.matrix{border-collapse:collapse; width:100%; max-width:430px}
+.matrix th{font-family:var(--mono); font-size:13px; font-weight:400; color:var(--muted);
+  padding:4px 8px; text-align:center}
+.matrix th.rowh{text-align:right; white-space:nowrap}
+.matrix td{border:1px solid var(--line-strong); padding:0; width:38%; background:var(--panel)}
+.cell{padding:12px 10px; text-align:center; position:relative;
+  opacity:0; transform:translateY(4px)}
+.cell.written{opacity:1; transform:none; transition:opacity .28s ease, transform .28s ease}
+.cell .pair{font-family:var(--mono); font-size:13px; color:var(--muted); display:block; margin-bottom:2px}
+.cell input{width:3.4em; text-align:center; background:transparent; border:0;
+  border-bottom:1.5px solid var(--brass); font-family:var(--mono); font-size:26px;
+  padding:0 0 1px; -moz-appearance:textfield}
+.cell input::-webkit-outer-spin-button,.cell input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cell input:focus{outline:none; border-bottom-color:var(--lapis)}
+.cell.lit{background:color-mix(in srgb,var(--brass) 16%,var(--panel))}
+.cell .other{font-family:var(--mono); font-size:13px; color:var(--muted)}
+td.hl{box-shadow:inset 0 0 0 2px var(--brass)}
+.chain{margin-top:12px; font-family:var(--mono); font-size:14px; display:flex; flex-wrap:wrap; gap:6px 14px}
+.rel{border-bottom:2px solid var(--lapis); color:var(--lapis)}
+.rel.bad{border-bottom-color:var(--brick); color:var(--brick)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.chip{font-family:var(--mono); font-size:12.5px; padding:3px 8px; border:1px solid var(--line);
+  border-radius:2px; background:var(--panel)}
+.chip.ok{border-color:var(--lapis); color:var(--lapis)}
+.chip.no{border-color:var(--brick); color:var(--brick)}
+.err{color:var(--brick); font-size:14px; min-height:1.4em; margin-top:8px}
+.linkish{background:none; border:0; padding:0; color:var(--lapis); text-decoration:underline;
+  text-underline-offset:3px; cursor:pointer; font-size:14px}
+
+.prompt{border:1px solid var(--line); background:var(--panel); padding:16px; margin-top:6px}
+.prompt h3{margin-bottom:8px}
+.bigbtn{font-family:var(--display); font-weight:700; font-size:19px; padding:.5em 1.1em;
+  border-width:1.5px; font-variation-settings:"wdth" 90}
+.bigbtn.c{border-color:var(--lapis); color:var(--lapis)}
+.bigbtn.d{border-color:var(--brick); color:var(--brick)}
+.bigbtn.c:hover{background:color-mix(in srgb,var(--lapis) 10%,var(--panel))}
+.bigbtn.d:hover{background:color-mix(in srgb,var(--brick) 10%,var(--panel))}
+.btnrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+/* ---- benches ---------------------------------------------------------- */
+.bench{padding:44px 0 10px; border-top:1px solid var(--line); margin-top:34px}
+.bench-head{display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; margin-bottom:16px}
+.bench-body{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:30px; align-items:start}
+@media (max-width:820px){.bench-body{grid-template-columns:1fr; gap:20px}}
+.readout{font-size:15px}
+.readout h3{margin:0 0 6px}
+.readout .stat{font-family:var(--mono); font-size:14px; display:flex; justify-content:space-between;
+  gap:10px; padding:3px 0; border-bottom:1px dotted var(--line)}
+.controls{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; margin:10px 0}
+.ctl{display:flex; flex-direction:column; gap:2px; font-size:13px}
+.ctl label{font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+.seg{display:inline-flex; border:1px solid var(--line)}
+.seg button{border:0; border-right:1px solid var(--line); border-radius:0; font-family:var(--mono); font-size:13px}
+.seg button:last-child{border-right:0}
+canvas{max-width:100%; touch-action:none; background:var(--panel); border:1px solid var(--line)}
+.tiles{display:flex; flex-wrap:wrap; gap:2px; margin:2px 0}
+.tile{width:14px; height:14px; font-size:9px; line-height:14px; text-align:center; color:#fff;
+  font-family:var(--mono)}
+.tile.C{background:var(--lapis)} .tile.D{background:var(--brick)}
+.tile.flip{outline:1.5px solid var(--brass); outline-offset:-1.5px}
+table.data{border-collapse:collapse; font-family:var(--mono); font-size:13px; width:100%}
+table.data th,table.data td{border-bottom:1px solid var(--line); padding:4px 6px; text-align:right}
+table.data th:first-child,table.data td:first-child{text-align:left}
+.bars{margin:4px 0}
+.bar{display:grid; grid-template-columns:74px minmax(0,1fr) 58px; gap:8px; align-items:center;
+  font-family:var(--mono); font-size:12.5px; padding:1.5px 0}
+.bar .track{position:relative; height:13px; background:var(--shade)}
+.bar .fill{position:absolute; left:0; top:0; bottom:0; width:0}
+.bar .whisk{position:absolute; top:50%; height:1px; background:var(--ink); opacity:.75}
+.bar .whisk::before,.bar .whisk::after{content:""; position:absolute; top:-3px; height:7px; width:1px;
+  background:var(--ink)}
+.bar .whisk::before{left:0} .bar .whisk::after{right:0}
+.tip{position:absolute; pointer-events:none; background:var(--ink); color:var(--ground);
+  font-family:var(--mono); font-size:12px; padding:3px 6px; border-radius:2px; z-index:5;
+  white-space:nowrap; opacity:0}
+.strip{display:flex; flex-wrap:wrap; gap:4px; font-family:var(--mono); font-size:12.5px}
+.strip div{border:1px solid var(--line); padding:3px 7px; background:var(--panel)}
+.canvas-wrap{position:relative; display:inline-block; max-width:100%}
+footer{border-top:1px solid var(--line); padding:22px 0 50px; font-size:14px; color:var(--muted)}
+footer a{margin-right:16px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#bench-payoffs">Skip to the benches</a>
+<div class="wrap">
+  <div class="topbar">
+    <span class="brand">pdlab · laboratory bench for the iterated Prisoner's Dilemma</span>
+    <button id="theme-toggle" aria-label="Switch colour theme">Theme: system</button>
+  </div>
+
+  <header class="hero">
+    <h1><span class="small">Two players, one temptation</span>Dilemma</h1>
+    <p class="lede">Defecting is better for you whatever the other player does. Both of you know it.
+      Both of you defect. Both of you do worse than if you had cooperated. Everything below is a
+      working instrument: change the payoffs, play a strategy, push a population, and watch the
+      theory hold or break.</p>
+    <div class="hero-grid">
+      <div>
+        <table class="matrix" id="matrix" aria-describedby="matrix-help">
+          <caption class="sr">Payoff matrix. Each cell shows your payoff and the other player's payoff.</caption>
+          <thead><tr><th></th><th scope="col">they cooperate</th><th scope="col">they defect</th></tr></thead>
+          <tbody>
+            <tr>
+              <th class="rowh" scope="row">you cooperate</th>
+              <td id="cell-R"><div class="cell"><span class="pair">R · reward</span>
+                <input id="in-R" type="number" step="0.5" aria-label="R, reward for mutual cooperation">
+                <span class="other">they get <span class="num" data-mirror="R"></span></span></div></td>
+              <td id="cell-S"><div class="cell"><span class="pair">S · sucker</span>
+                <input id="in-S" type="number" step="0.5" aria-label="S, sucker payoff">
+                <span class="other">they get <span class="num" data-mirror="T"></span></span></div></td>
+            </tr>
+            <tr>
+              <th class="rowh" scope="row">you defect</th>
+              <td id="cell-T"><div class="cell"><span class="pair">T · temptation</span>
+                <input id="in-T" type="number" step="0.5" aria-label="T, temptation payoff">
+                <span class="other">they get <span class="num" data-mirror="S"></span></span></div></td>
+              <td id="cell-P"><div class="cell"><span class="pair">P · punishment</span>
+                <input id="in-P" type="number" step="0.5" aria-label="P, punishment for mutual defection">
+                <span class="other">they get <span class="num" data-mirror="P"></span></span></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <p id="matrix-help" class="cap" style="margin-top:8px">Edit any cell. Every threshold on this page follows.</p>
+        <div class="chain" id="chain" role="status"></div>
+        <div class="chips" id="oneshot-chips"></div>
+        <p class="err" id="matrix-err" role="alert"></p>
+        <button class="linkish" id="reset-axelrod">Reset to Axelrod (5, 3, 1, 0)</button>
+      </div>
+      <div class="prompt">
+        <h3>Your move.</h3>
+        <p class="cap" id="hero-round">Round 1 against a hidden strategy.</p>
+        <div class="btnrow">
+          <button class="bigbtn c" id="hero-c">Cooperate</button>
+          <button class="bigbtn d" id="hero-d">Defect</button>
+          <button class="linkish" id="hero-reset">Start over</button>
+        </div>
+        <p id="hero-msg" style="margin-top:12px; min-height:3em">Pick one. The hidden strategy has
+          already picked.</p>
+        <div class="stat mono" id="hero-score">you 0 · them 0</div>
+        <p class="cap" id="hero-reveal" style="margin-top:8px"></p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="rail" aria-label="Benches">
+      <ol>
+        <li><a href="#bench-payoffs">Edit payoffs</a></li>
+        <li><a href="#bench-play">Play a strategy</a></li>
+        <li><a href="#bench-tournament">Watch the tournament</a></li>
+        <li><a href="#bench-population">Push the population</a></li>
+        <li><a href="#bench-lattice">Grow cooperation on a lattice</a></li>
+        <li><a href="#bench-patience">Turn the patience dial</a></li>
+        <li><a href="#bench-noise">Noise &amp; extortion</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <!-- 1 -->
+      <section class="bench" id="bench-payoffs">
+        <div class="bench-head"><h2>Edit payoffs</h2><span class="cap">the one-shot game</span></div>
+        <div class="bench-body">
+          <div>
+            <p>The matrix above is live. Drag it out of the dilemma — make R larger than T, say —
+              and the relations below turn brick and the whole page changes its verdicts.</p>
+            <div class="chips" id="derived-chips"></div>
+            <p class="cap" style="margin-top:10px">Best responses:
+              <span class="num" id="br-line"></span></p>
+          </div>
+          <div class="readout">
+            <h3>What has to be true</h3>
+            <p>A strict Prisoner's Dilemma needs <span class="mono">T &gt; R &gt; P &gt; S</span> — so
+              defection strictly dominates — and <span class="mono">2R &gt; T + S</span>, so steady
+              cooperation beats taking turns exploiting each other.</p>
+            <div class="stat"><span>&delta;* Grim = (T&minus;R)/(T&minus;P)</span><span id="ro-grim"></span></div>
+            <div class="stat"><span>&delta;* TFT = max((T&minus;R)/(T&minus;P), (T&minus;R)/(R&minus;S))</span><span id="ro-tft"></span></div>
+            <div class="stat"><span>(P&minus;S)/(T&minus;P)</span><span id="ro-dd"></span></div>
+            <p class="cap" style="margin-top:10px">Python at Axelrod payoffs:
+              &delta;*<sub>Grim</sub> = <span class="num" id="py-grim"></span>,
+              &delta;*<sub>TFT</sub> = <span class="num" id="py-tft"></span>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section class="bench" id="bench-play">
+        <div class="bench-head"><h2>Play a strategy</h2><span class="cap">17 opponents, your hand on the lever</span></div>
+        <div class="bench-body">
+          <div>
+            <div class="controls">
+              <div class="ctl"><label for="opp-select">opponent</label>
+                <select id="opp-select"></select></div>
+              <div class="ctl"><label for="me-select">you play</label>
+                <select id="me-select"><option value="__me">by hand</option></select></div>
+              <div class="ctl"><label for="noise-play">noise &epsilon; = <span class="num" id="noise-play-val">0.00</span></label>
+                <input id="noise-play" type="range" min="0" max="0.2" step="0.01" value="0"></div>
+              <div class="ctl"><label for="seed-play">seed</label>
+                <input id="seed-play" type="number" value="1" min="0" step="1" style="width:6em;background:var(--panel);border:1px solid var(--line);padding:.3em"></div>
+            </div>
+            <div class="btnrow">
+              <button class="bigbtn c" id="play-c">Cooperate</button>
+              <button class="bigbtn d" id="play-d">Defect</button>
+              <button id="play-auto">Auto-play 200 rounds</button>
+              <button id="play-reset">Reset</button>
+            </div>
+            <p class="cap" id="play-idle" style="margin-top:10px">Pick an opponent and play 20 rounds.</p>
+            <div style="margin-top:10px">
+              <div class="cap">you</div><div class="tiles" id="hist-me" aria-hidden="true"></div>
+              <div class="cap">them</div><div class="tiles" id="hist-them" aria-hidden="true"></div>
+              <p class="sr" id="hist-sr" role="status"></p>
+            </div>
+          </div>
+          <div class="readout">
+            <h3>Scoreboard</h3>
+            <div class="stat"><span>rounds</span><span class="num" id="play-rounds">0</span></div>
+            <div class="stat"><span>you</span><span class="num" id="play-score-me">0.00 total · 0.00 / round</span></div>
+            <div class="stat"><span id="play-opp-label">them</span><span class="num" id="play-score-them">0.00 total · 0.00 / round</span></div>
+            <div class="stat"><span>your cooperation rate</span><span class="num" id="play-coop">—</span></div>
+            <p class="cap" style="margin-top:8px" id="play-compare">Auto-play to compare with the Python tournament matrix.</p>
+            <p style="margin-top:10px" id="play-note">Scored with the canonical payoffs
+              <span class="mono" id="play-pm"></span> — the hero matrix drives the theory benches, not this one.
+              Noise flips each intended move independently, exactly as <span class="mono">play_match</span> does.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="bench" id="bench-tournament">
+        <div class="bench-head"><h2>Watch the tournament</h2><span class="cap">round robin, 18 strategies, self-play included</span></div>
+        <div class="bench-body">
+          <div>
+            <div class="controls">
+              <div class="ctl"><label id="noise-seg-label">noise level</label>
+                <div class="seg" id="noise-seg" role="group" aria-labelledby="noise-seg-label"></div></div>
+            </div>
+            <div class="bars" id="leaderboard"></div>
+            <p class="cap" style="margin-top:6px">Bar colour is cooperation rate: lapis cooperative,
+              brick defecting. Whisker is ±1 sd across repetitions.</p>
+            <h3 style="margin-top:22px">Who beats whom</h3>
+            <div class="canvas-wrap">
+              <canvas id="heat" width="380" height="380" role="img"
+                aria-label="18 by 18 heatmap of mean per-round payoff, row strategy against column strategy"></canvas>
+              <div class="tip" id="heat-tip"></div>
+            </div>
+            <p class="cap" id="heat-readout">Hover a cell for the row's mean per-round payoff.</p>
+          </div>
+          <div class="readout">
+            <h3>The nice ones win, until it gets loud</h3>
+            <p>Without noise a retaliating-but-forgiving strategy tops the table. Add
+              implementation error and plain TFT starts echoing its own mistakes; contrite TFT,
+              which apologises for its own slips, takes over.</p>
+            <div class="stat"><span>winner here</span><span class="num" id="ldr-winner"></span></div>
+            <div class="stat"><span>its score</span><span class="num" id="ldr-score"></span></div>
+            <div class="stat"><span>its cooperation rate</span><span class="num" id="ldr-coop"></span></div>
+            <div class="stat"><span>last place</span><span class="num" id="ldr-last"></span></div>
+            <p class="cap" style="margin-top:8px">Every score comes from <span class="mono">pdlab tournament</span>;
+              nothing here is recomputed in the browser.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 -->
+      <section class="bench" id="bench-population">
+        <div class="bench-head"><h2>Push the population</h2><span class="cap">replicator dynamics, ALLC / ALLD / TFT</span></div>
+        <div class="bench-body">
+          <div>
+            <div class="canvas-wrap">
+              <canvas id="simplex" width="440" height="400" tabindex="0" role="img"
+                aria-label="Ternary simplex with ALLC bottom left, ALLD bottom right, TFT at the top. Drag the start point; the trajectory is integrated live."></canvas>
+            </div>
+            <p class="cap">Drag the open circle, or focus the canvas and nudge with the arrow keys.</p>
+            <div class="controls">
+              <button id="sim-alld">Start near ALLD</button>
+              <button id="sim-star">Start just above x*</button>
+              <button id="sim-mix">Even mix</button>
+            </div>
+          </div>
+          <div class="readout">
+            <h3>TFT needs a beachhead</h3>
+            <p>ALLD is an ESS: a lone TFT among defectors loses. But a cluster above
+              <span class="mono">x*</span> tips the whole population to cooperation, and the
+              ALLC–TFT edge is a line of neutral fixed points — ALLC drifts in for free once TFT has won.</p>
+            <div class="stat"><span>start</span><span class="num" id="sim-start"></span></div>
+            <div class="stat"><span>end (t = 80)</span><span class="num" id="sim-end"></span></div>
+            <div class="stat"><span>verdict</span><span class="num" id="sim-verdict"></span></div>
+            <div class="stat"><span>x* on the ALLD–TFT edge</span><span class="num" id="sim-xstar"></span></div>
+            <div class="stat"><span>eigenvalues at ALLD</span><span class="num" id="sim-eig-alld"></span></div>
+            <div class="stat"><span>eigenvalues at TFT</span><span class="num" id="sim-eig-tft"></span></div>
+            <div class="stat"><span>ESS</span><span class="num" id="sim-ess"></span></div>
+            <p class="cap" style="margin-top:8px">A from Python (&delta; = <span class="num" id="sim-delta"></span>);
+              the browser only runs RK4 (dt = 0.05) from where you drop the point.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="bench" id="bench-lattice">
+        <div class="bench-head"><h2>Grow cooperation on a lattice</h2><span class="cap">Nowak &amp; May 1992</span></div>
+        <div class="bench-body">
+          <div>
+            <div class="canvas-wrap">
+              <canvas id="lattice" width="320" height="320" role="img"
+                aria-label="80 by 80 lattice of cooperators and defectors"></canvas>
+            </div>
+            <div class="controls">
+              <button id="lat-play">Play</button>
+              <button id="lat-step">Step</button>
+              <button id="lat-reset">Reset</button>
+              <div class="ctl"><label for="lat-b">b = <span class="num" id="lat-b-val">1.90</span></label>
+                <input id="lat-b" type="range" min="1.05" max="1.99" step="0.01" value="1.9"></div>
+              <div class="ctl"><label for="lat-start">start</label>
+                <select id="lat-start"><option value="random">random 90% C</option>
+                  <option value="single">single defector</option></select></div>
+              <div class="ctl"><label for="lat-bnd">boundary</label>
+                <select id="lat-bnd"><option value="periodic">periodic</option>
+                  <option value="fixed">fixed</option></select></div>
+              <div class="ctl"><label for="lat-upd">update</label>
+                <select id="lat-upd"><option value="sync">synchronous</option>
+                  <option value="async">asynchronous</option></select></div>
+            </div>
+            <canvas id="lat-spark" width="320" height="56" role="img"
+              aria-label="Sparkline of the cooperator fraction over generations"></canvas>
+            <p class="cap" id="lat-readout">generation 0 · f_C = —</p>
+          </div>
+          <div class="readout">
+            <h3>Space is enough</h3>
+            <p>No memory, no reciprocity, no reputation — just neighbours copying whoever did best
+              nearby. Cooperator clusters keep their edges fed, and cooperation survives at a
+              defection advantage that would wipe it out in a well-mixed population.</p>
+            <div class="stat"><span>Python, b = 1.8, 200 gens</span><span class="num" id="lat-py"></span></div>
+            <div class="stat"><span>Nowak &amp; May published</span><span class="num">0.318</span></div>
+            <div class="stat"><span>here, now</span><span class="num" id="lat-now">—</span></div>
+            <p class="cap" id="lat-compare" style="margin-top:6px"></p>
+            <h3 style="margin-top:16px">Phase diagram</h3>
+            <canvas id="lat-phase" width="320" height="150" role="img"
+              aria-label="Asymptotic cooperator fraction against b, from Python"></canvas>
+            <p class="cap" id="lat-phase-cap"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 -->
+      <section class="bench" id="bench-patience">
+        <div class="bench-head"><h2>Turn the patience dial</h2><span class="cap">the folk theorem, one slider</span></div>
+        <div class="bench-body">
+          <div>
+            <div class="ctl" style="max-width:320px">
+              <label for="delta">&delta; = <span class="num" id="delta-val">0.90</span> · a round is worth
+                <span class="num" id="delta-life"></span> rounds of future</label>
+              <input id="delta" type="range" min="0" max="0.99" step="0.01" value="0.9">
+            </div>
+            <div class="bars" id="delta-bars" style="max-width:430px; margin-top:14px"></div>
+            <p class="cap">Normalised per-round values, so they are directly comparable.</p>
+            <div class="chips" id="delta-chips" style="margin-top:12px"></div>
+            <p style="margin-top:10px" id="delta-explain"></p>
+          </div>
+          <div class="readout">
+            <h3>Patience buys cooperation, but not subgame perfection</h3>
+            <p>Grim Trigger is a subgame-perfect equilibrium as soon as the future is worth more
+              than one free lunch: &delta; ≥ (T&minus;R)/(T&minus;P). TFT is a Nash equilibrium a bit
+              later, because a deviator can also alternate D, C, D, C forever against it.</p>
+            <p>TFT is essentially never subgame perfect: on path it needs
+              &delta; ≥ (T&minus;R)/(R&minus;S), but after being cheated it must prefer punishing,
+              which needs &delta; ≤ (T&minus;R)/(R&minus;S), and after mutual defection it needs
+              &delta; ≤ (P&minus;S)/(T&minus;P). At Axelrod payoffs those cannot hold together.</p>
+            <div class="stat"><span>Python &delta;*<sub>Grim</sub></span><span class="num" id="py2-grim"></span></div>
+            <div class="stat"><span>Python &delta;*<sub>TFT, Nash</sub></span><span class="num" id="py2-tft"></span></div>
+            <div class="stat"><span>Python (P&minus;S)/(T&minus;P)</span><span class="num" id="py2-dd"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 -->
+      <section class="bench" id="bench-noise">
+        <div class="bench-head"><h2>Noise &amp; extortion</h2><span class="cap">what a trembling hand costs, and who profits</span></div>
+        <div class="bench-body">
+          <div>
+            <h3>Self-play under implementation error</h3>
+            <div class="canvas-wrap">
+              <canvas id="noise-chart" width="420" height="260" role="img"
+                aria-label="Exact self-play payoff against the error rate epsilon, per strategy"></canvas>
+              <div class="tip" id="noise-tip"></div>
+            </div>
+            <div id="noise-legend" class="cap"></div>
+            <h3 style="margin-top:22px">Extortion</h3>
+            <div class="canvas-wrap">
+              <canvas id="zd-chart" width="420" height="300" role="img"
+                aria-label="Scatter of Extort-2's payoff against its opponent's payoff, with the extortion line"></canvas>
+              <div class="tip" id="zd-tip"></div>
+            </div>
+            <p class="cap">Line: s<sub>X</sub> &minus; 1 = 2(s<sub>Y</sub> &minus; 1). Every point sits on it,
+              whatever the opponent does.</p>
+          </div>
+          <div class="readout">
+            <h3>Exact, not simulated</h3>
+            <p>These payoffs come from the stationary distribution of the memory-one Markov chain,
+              solved symbolically. TFT's self-play value collapses the instant &epsilon; &gt; 0:
+              the chain spends equal time in all four states.</p>
+            <div id="noise-forms" class="cap"></div>
+            <h3 style="margin-top:16px">A Q-learner meets the extortioner</h3>
+            <table class="data" id="zd-learner"><thead><tr><th>opponent</th><th>learner</th><th>opponent</th><th>policy</th></tr></thead><tbody></tbody></table>
+            <p class="cap" style="margin-top:6px">Extortion beats a learner that keeps learning; it
+              loses to a population that evolves.</p>
+            <table class="data" id="zd-evo"><thead><tr><th>strategy</th><th>final share</th></tr></thead><tbody></tbody></table>
+            <h3 style="margin-top:16px">Dominant strategy vs noise</h3>
+            <div class="strip" id="evo-strip"></div>
+            <p class="cap" style="margin-top:6px">Moran-process dominant strategy:
+              <span class="num" id="moran-dom"></span>.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Every number on this page was produced by <span class="mono">pdlab</span> (Python) and embedded
+      at build time; the app recomputes only what you touch.</p>
+    <p><a href="../report/build/prisoners_dilemma_report.pdf">The report (PDF)</a>
+       <a href="../README.md">README</a></p>
+  </footer>
+</div>
+<script>
+const PAYLOAD = {"payoffs":{"T":5,"R":3,"P":1,"S":0},"thresholds":{"grim_spe":0.5,"tft_vs_alld":0.5,"tft_vs_alternate":0.6666666666666666,"tft_nash":0.6666666666666666,"tft_after_dd_max":0.25},"leaderboards":{"0.0":[{"rank":1,"strategy":"GRADUAL","score":2.6648148148148145,"score_sd":0.05237828008789233,"coop_rate":0.8592592592592593},{"rank":2,"strategy":"TFT","score":2.6212962962962965,"score_sd":0.003928371006591917,"coop_rate":0.7666666666666667},{"rank":3,"strategy":"CTFT","score":2.621296296296296,"score_sd":0.006547285010986109,"coop_rate":0.762037037037037},{"rank":4,"strategy":"SOFTMAJ","score":2.5851851851851855,"score_sd":0.0026189140043945064,"coop_rate":0.7657407407407407},{"rank":5,"strategy":"ZDGTFT2","score":2.5481481481481483,"score_sd":0.03666479606152498,"coop_rate":0.8138888888888889},{"rank":6,"strategy":"GTFT","score":2.525,"score_sd":0.09559036116040372,"coop_rate":0.8648148148148148},{"rank":7,"strategy":"ALT","score":2.4537037037037037,"score_sd":0.13618352822851998,"coop_rate":0.5},{"rank":8,"strategy":"WSLS","score":2.4370370370370367,"score_sd":0.047140452079103,"coop_rate":0.7666666666666666},{"rank":9,"strategy":"TF2T","score":2.425925925925926,"score_sd":0.007856742013183834,"coop_rate":0.8425925925925927},{"rank":10,"strategy":"PROBER","score":2.4037037037037035,"score_sd":0.03666479606152466,"coop_rate":0.47870370370370374},{"rank":11,"strategy":"ALLC","score":2.391666666666667,"score_sd":0.019641855032959583,"coop_rate":1.0},{"rank":12,"strategy":"GRIM","score":2.3759259259259258,"score_sd":0.10737547418017948,"coop_rate":0.5879629629629629},{"rank":13,"strategy":"QLEARN","score":2.2712962962962964,"score_sd":0.058925565098879376,"coop_rate":0.49351851851851847},{"rank":14,"strategy":"RANDOM","score":2.2564814814814818,"score_sd":0.01178511301977575,"coop_rate":0.4962962962962963},{"rank":15,"strategy":"STFT","score":2.208333333333333,"score_sd":0.030117511050537924,"coop_rate":0.4898148148148148},{"rank":16,"strategy":"HARDMAJ","score":2.1944444444444446,"score_sd":0.06023502210107616,"coop_rate":0.45000000000000007},{"rank":17,"strategy":"ALLD","score":1.8222222222222224,"score_sd":0.010475656017578498,"coop_rate":0.0},{"rank":18,"strategy":"EXTORT2","score":1.7824074074074072,"score_sd":0.056306651094484246,"coop_rate":0.13703703703703704}],"0.01":[{"rank":1,"strategy":"TFT","score":2.6111111111111116,"score_sd":0.007856742013183518,"coop_rate":0.7546296296296295},{"rank":2,"strategy":"CTFT","score":2.573148148148148,"score_sd":0.05106882308569555,"coop_rate":0.7250000000000001},{"rank":3,"strategy":"ALT","score":2.571296296296296,"score_sd":0.02749859704614373,"coop_rate":0.5009259259259259},{"rank":4,"strategy":"GRADUAL","score":2.541666666666667,"score_sd":0.14796864124829606,"coop_rate":0.7907407407407407},{"rank":5,"strategy":"SOFTMAJ","score":2.5074074074074075,"score_sd":0.049759366083497826,"coop_rate":0.8166666666666668},{"rank":6,"strategy":"ZDGTFT2","score":2.4981481481481485,"score_sd":0.09689981816260082,"coop_rate":0.7925925925925925},{"rank":7,"strategy":"GTFT","score":2.494444444444445,"score_sd":0.12570787221094196,"coop_rate":0.8398148148148148},{"rank":8,"strategy":"TF2T","score":2.391666666666667,"score_sd":0.01178511301977575,"coop_rate":0.8},{"rank":9,"strategy":"WSLS","score":2.3851851851851853,"score_sd":0.026189140043946006,"coop_rate":0.6842592592592592},{"rank":10,"strategy":"GRIM","score":2.3777777777777778,"score_sd":0.10999438818457366,"coop_rate":0.5342592592592593},{"rank":11,"strategy":"PROBER","score":2.3768518518518524,"score_sd":0.09820927516479824,"coop_rate":0.45370370370370366},{"rank":12,"strategy":"ALLC","score":2.2518518518518515,"score_sd":0.10737547418017948,"coop_rate":0.9861111111111112},{"rank":13,"strategy":"HARDMAJ","score":2.208333333333333,"score_sd":0.09820927516479792,"coop_rate":0.4027777777777778},{"rank":14,"strategy":"STFT","score":2.1416666666666666,"score_sd":0.0065472850109864235,"coop_rate":0.4712962962962963},{"rank":15,"strategy":"RANDOM","score":2.1333333333333337,"score_sd":0.013094570021973161,"coop_rate":0.49537037037037035},{"rank":16,"strategy":"QLEARN","score":2.0962962962962965,"score_sd":0.18332398030762315,"coop_rate":0.42407407407407405},{"rank":17,"strategy":"EXTORT2","score":2.011111111111111,"score_sd":0.25141574442188347,"coop_rate":0.23888888888888887},{"rank":18,"strategy":"ALLD","score":1.9111111111111114,"score_sd":0.05499719409228699,"coop_rate":0.005555555555555556}],"0.05":[{"rank":1,"strategy":"CTFT","score":2.4407407407407407,"score_sd":0.09428090415820663,"coop_rate":0.625},{"rank":2,"strategy":"TFT","score":2.427777777777778,"score_sd":0.0419026240703143,"coop_rate":0.6175925925925926},{"rank":3,"strategy":"ZDGTFT2","score":2.4268518518518523,"score_sd":0.024879683041748913,"coop_rate":0.7231481481481481},{"rank":4,"strategy":"GTFT","score":2.412962962962963,"score_sd":0.06809176411426031,"coop_rate":0.7703703703703704},{"rank":5,"strategy":"SOFTMAJ","score":2.4037037037037035,"score_sd":0.01047565601757834,"coop_rate":0.7722222222222223},{"rank":6,"strategy":"GRADUAL","score":2.4027777777777777,"score_sd":0.07725796312964124,"coop_rate":0.6722222222222223},{"rank":7,"strategy":"TF2T","score":2.3361111111111112,"score_sd":0.07202013512085191,"coop_rate":0.7749999999999999},{"rank":8,"strategy":"WSLS","score":2.3064814814814816,"score_sd":0.11130384518677203,"coop_rate":0.6018518518518517},{"rank":9,"strategy":"ALT","score":2.273148148148148,"score_sd":0.27891434146802674,"coop_rate":0.49351851851851847},{"rank":10,"strategy":"GRIM","score":2.2685185185185186,"score_sd":0.0864241621450228,"coop_rate":0.2796296296296296},{"rank":11,"strategy":"HARDMAJ","score":2.2666666666666666,"score_sd":0.15713484026367763,"coop_rate":0.4712962962962963},{"rank":12,"strategy":"RANDOM","score":2.2620370370370373,"score_sd":0.01702294102856476,"coop_rate":0.5138888888888888},{"rank":13,"strategy":"PROBER","score":2.252777777777778,"score_sd":0.2082036633493719,"coop_rate":0.4046296296296296},{"rank":14,"strategy":"STFT","score":2.2444444444444445,"score_sd":0.14404027024170446,"coop_rate":0.5194444444444445},{"rank":15,"strategy":"ALLC","score":2.231481481481481,"score_sd":0.026189140043946006,"coop_rate":0.948148148148148},{"rank":16,"strategy":"QLEARN","score":2.102777777777778,"score_sd":0.11916058719995491,"coop_rate":0.48796296296296293},{"rank":17,"strategy":"ALLD","score":2.0898148148148143,"score_sd":0.09297144715600922,"coop_rate":0.052777777777777785},{"rank":18,"strategy":"EXTORT2","score":1.9824074074074076,"score_sd":0.10606601717798253,"coop_rate":0.287962962962963}],"0.1":[{"rank":1,"strategy":"CTFT","score":2.3657407407407414,"score_sd":0.017022941028565077,"coop_rate":0.5805555555555555},{"rank":2,"strategy":"QLEARN","score":2.3342592592592597,"score_sd":0.07725796312964092,"coop_rate":0.3657407407407407},{"rank":3,"strategy":"ZDGTFT2","score":2.3324074074074073,"score_sd":0.08249579113843057,"coop_rate":0.661111111111111},{"rank":4,"strategy":"WSLS","score":2.3324074074074073,"score_sd":0.0903525331516144,"coop_rate":0.5879629629629629},{"rank":5,"strategy":"SOFTMAJ","score":2.3314814814814815,"score_sd":0.24617791641309397,"coop_rate":0.7101851851851853},{"rank":6,"strategy":"STFT","score":2.3203703703703704,"score_sd":0.06023502210107616,"coop_rate":0.5120370370370371},{"rank":7,"strategy":"GRADUAL","score":2.32037037037037,"score_sd":0.07856742013183833,"coop_rate":0.6361111111111111},{"rank":8,"strategy":"TFT","score":2.3027777777777776,"score_sd":0.07202013512085159,"coop_rate":0.5435185185185186},{"rank":9,"strategy":"ALT","score":2.2953703703703705,"score_sd":0.04321208107251171,"coop_rate":0.5074074074074074},{"rank":10,"strategy":"RANDOM","score":2.287037037037037,"score_sd":0.162372668272466,"coop_rate":0.501851851851852},{"rank":11,"strategy":"TF2T","score":2.2537037037037035,"score_sd":0.1099943881845743,"coop_rate":0.7583333333333334},{"rank":12,"strategy":"HARDMAJ","score":2.236111111111111,"score_sd":0.08511470514282507,"coop_rate":0.5166666666666667},{"rank":13,"strategy":"GTFT","score":2.226851851851852,"score_sd":0.10606601717798206,"coop_rate":0.6925925925925925},{"rank":14,"strategy":"GRIM","score":2.1981481481481477,"score_sd":0.013094570021973161,"coop_rate":0.2027777777777778},{"rank":15,"strategy":"PROBER","score":2.1425925925925924,"score_sd":0.1492780982504938,"coop_rate":0.3768518518518518},{"rank":16,"strategy":"ALLC","score":2.087962962962963,"score_sd":0.03535533905932788,"coop_rate":0.8916666666666667},{"rank":17,"strategy":"ALLD","score":2.083333333333333,"score_sd":0.026189140043946006,"coop_rate":0.09814814814814815},{"rank":18,"strategy":"EXTORT2","score":2.0703703703703704,"score_sd":0.028808054048340827,"coop_rate":0.3333333333333333}]},"payoff_matrix":{"names":["ALLC","ALLD","TFT","STFT","GTFT","TF2T","GRIM","WSLS","CTFT","RANDOM","ALT","SOFTMAJ","HARDMAJ","PROBER","GRADUAL","EXTORT2","ZDGTFT2","QLEARN"],"values":[[3.0,0.0,3.0,2.9,3.0,3.0,3.0,3.0,3.0,1.65,1.5,3.0,2.9,0.2,3.0,1.8,3.0,2.1],[5.0,1.0,1.1333333333333333,1.0,2.6,1.2666666666666666,1.1333333333333333,3.0,1.1333333333333333,2.8,3.0,1.1333333333333333,1.0,1.2666666666666666,2.466666666666667,1.0,1.6666666666666667,1.2],[3.0,0.9666666666666667,3.0,2.5,3.0,3.0,3.0,3.0,3.0,2.1833333333333336,2.433333333333333,3.0,2.5,2.966666666666667,3.0,0.9666666666666667,3.0,2.666666666666667],[3.066666666666667,1.0,2.5,1.0,3.05,3.066666666666667,1.1,2.0,2.5,2.3,2.5,2.5,1.0,3.0,3.033333333333333,1.0,2.8166666666666664,2.3166666666666664],[3.0,0.6,3.0,2.8833333333333333,3.0,3.0,3.0,3.0,3.0,1.7833333333333332,2.033333333333333,3.0,2.85,1.8666666666666667,3.0,0.8833333333333333,3.0,2.55],[3.0,0.9333333333333333,3.0,2.9,3.0,3.0,3.0,3.0,3.0,1.6833333333333333,1.5,3.0,2.9,1.0333333333333334,3.0,1.1833333333333333,3.0,1.5333333333333332],[3.0,0.9666666666666667,3.0,1.1,3.0,3.0,3.0,3.0,3.0,2.7,2.9,3.0,1.1,1.2333333333333334,3.0,1.3,3.0,1.4666666666666666],[3.0,0.5,3.0,2.0,3.0,3.0,3.0,3.0,3.0,2.3166666666666664,2.2,3.0,0.6333333333333333,2.1333333333333333,3.0,1.9166666666666665,3.0,2.1666666666666665],[3.0,0.9666666666666667,3.0,2.5,3.0,3.0,3.0,3.0,3.0,2.45,2.433333333333333,3.0,2.5,2.966666666666667,3.0,0.9666666666666667,3.0,2.4],[3.9,0.55,2.35,2.216666666666667,2.95,3.0999999999999996,0.7833333333333333,2.2333333333333334,2.533333333333333,2.216666666666667,2.1,1.4,3.2333333333333334,2.4333333333333336,2.1333333333333337,1.1833333333333333,2.5166666666666666,2.783333333333333],[4.0,0.5,2.6,2.5,3.2,4.0,0.7333333333333333,2.3666666666666667,2.6,2.4333333333333336,2.0,4.0,2.5,2.6,2.3,1.2,2.8,1.8333333333333335],[3.0,0.9666666666666667,3.0,2.5,3.0,3.0,3.0,3.0,3.0,2.4,1.5,3.0,2.5,2.966666666666667,3.0,0.9666666666666667,3.0,2.7333333333333334],[3.066666666666667,1.0,2.5,1.0,3.0166666666666666,3.066666666666667,1.1,2.966666666666667,2.5,2.0666666666666664,2.5,2.5,1.0,2.533333333333333,3.033333333333333,1.0,2.833333333333333,1.8166666666666667],[4.866666666666666,0.9333333333333333,2.966666666666667,2.8333333333333335,2.783333333333333,1.5333333333333334,1.0666666666666667,1.9666666666666666,2.966666666666667,2.3499999999999996,2.433333333333333,2.966666666666667,2.3666666666666667,1.1333333333333333,2.966666666666667,0.9833333333333334,2.45,3.6999999999999997],[3.0,0.6333333333333333,3.0,2.8666666666666667,3.0,3.0,3.0,3.0,3.0,2.3833333333333333,2.3,3.0,2.8666666666666667,2.966666666666667,3.0,1.7333333333333334,3.0,2.216666666666667],[3.8,1.0,1.1333333333333333,1.0,2.216666666666667,1.7666666666666666,1.05,2.0833333333333335,1.1333333333333333,2.6,2.783333333333333,1.1333333333333333,1.0,1.3166666666666667,2.7333333333333334,1.0,2.5166666666666666,1.8166666666666667],[3.0,0.8333333333333334,3.0,2.65,3.0,3.0,3.0,3.0,3.0,2.0166666666666666,2.3,3.0,2.666666666666667,1.9500000000000002,3.0,1.6,3.0,1.85],[3.6,0.95,2.666666666666667,2.2333333333333334,2.966666666666667,3.95,1.6333333333333333,2.833333333333333,2.5666666666666664,1.7833333333333332,2.583333333333333,1.9833333333333334,1.5666666666666667,1.4500000000000002,2.466666666666667,1.15,2.7666666666666666,1.7333333333333334]]},"replicator":{"delta":0.9,"A":[[3.0,0.0,3.0],[5.0,1.0,1.4],[3.0,0.9,3.0]],"x_star":0.058823529411764684,"eigenvalues":{"ALLC":[2.000000000058511,-1.7001955399350305e-12],"ALLD":[-0.9999999999989999,-0.1000000000016999],"TFT":[-1.5999999996036198,1.0000889005817142e-12],"TFT_ALLD_edge":[0.09411764705329911,-0.8470588235284117]},"ess":{"ALLC":false,"ALLD":true,"TFT":false}},"noise_selfplay":{"eps":[0.001,0.084,0.167,0.25],"strategies":{"TFT":{"p":[1.0,0.0,1.0,0.0],"exact":[2.2499999999999987,2.2499999999999996,2.249999999999999,2.25],"series_axelrod":"9/4"},"GTFT":{"p":[1.0,0.33333333333333337,1.0,0.33333333333333337],"exact":[2.997003023761528,2.775798701997203,2.609424331038766,2.4843750000000004],"series_axelrod":"3 - 3*varepsilon"},"WSLS":{"p":[1.0,0.0,0.0,1.0],"exact":[2.9950109919999996,2.652874368,2.434519296,2.3125],"series_axelrod":"3 - 5*varepsilon"},"STFT":{"p":[1.0,0.0,1.0,0.0],"exact":[2.2499999999999987,2.2499999999999996,2.249999999999999,2.25],"series_axelrod":"9/4"},"ALLC":{"p":[1.0,1.0,1.0,1.0],"exact":[2.998999,2.9089440000000004,2.8051109999999992,2.6874999999999996],"series_axelrod":"3 - varepsilon"},"ALLD":{"p":[0.0,0.0,0.0,0.0],"exact":[1.002999,1.2449439999999996,1.4731109999999998,1.6874999999999996],"series_axelrod":"3*varepsilon + 1"},"EXTORT2":{"p":[0.8888888888888888,0.5,0.33333333333333337,0.0],"exact":[1.0177676188195046,1.7320029393437073,1.9742674453786917,2.0984069886947587],"series_axelrod":"18*varepsilon + 1"},"ZDGTFT2":{"p":[1.0,0.125,1.0,0.25],"exact":[2.9921099257065897,2.6501503407071887,2.4961262178752364,2.400379506641366],"series_axelrod":"3 - 8*varepsilon"}}},"spatial_phase":[{"b":1.05,"coop_mean":0.975,"coop_sd":0.0},{"b":1.3633333333333333,"coop_mean":0.8225,"coop_sd":0.0},{"b":1.6766666666666667,"coop_mean":0.6950000000000001,"coop_sd":0.0},{"b":1.99,"coop_mean":0.015,"coop_sd":0.0}],"spatial_coop_1p8_2":0.015,"moran_fixation":[{"N":4,"exact":0.2588668496196199,"neutral":0.25,"sim":0.34,"runs":50},{"N":6,"exact":0.21211020673451156,"neutral":0.16666666666666666,"sim":0.32,"runs":50},{"N":8,"exact":0.18667700371036583,"neutral":0.125,"sim":0.2,"runs":50},{"N":12,"exact":0.15651813061696282,"neutral":0.08333333333333333,"sim":0.12,"runs":50},{"N":16,"exact":0.1371463601769965,"neutral":0.0625,"sim":0.06,"runs":50},{"N":24,"exact":0.11165746069990858,"neutral":0.041666666666666664,"sim":0.16,"runs":50},{"N":32,"exact":0.09492192222681856,"neutral":0.03125,"sim":0.06,"runs":50}],"moran_mutation":[{"mu":0.0,"dominant":"ALLC","mean_payoff":3.0,"coop_rate":1.0},{"mu":0.001,"dominant":"ALLC","mean_payoff":3.0,"coop_rate":0.9999999999999998},{"mu":0.005,"dominant":"RANDOM","mean_payoff":2.2349218989468653,"coop_rate":0.5084300844011114},{"mu":0.01,"dominant":"WSLS","mean_payoff":2.9690216323802656,"coop_rate":0.9793891004100767},{"mu":0.02,"dominant":"RANDOM","mean_payoff":2.2326564901964514,"coop_rate":0.5020319522302541},{"mu":0.05,"dominant":"GRADUAL","mean_payoff":2.500593190359423,"coop_rate":0.6818770573415924},{"mu":0.1,"dominant":"ALLD","mean_payoff":2.17396326051571,"coop_rate":0.5345728911448197},{"mu":0.2,"dominant":"TFT","mean_payoff":2.6876470547434588,"coop_rate":0.7918723940062603},{"mu":0.3,"dominant":"GRADUAL","mean_payoff":2.5609526081643983,"coop_rate":0.7020305442143611}],"moran_three":[{"mu":0.0,"mean_freq":[0.0,0.0,1.0],"coop_rate":1.0,"mean_payoff":3.0,"frac_time_alld_majority":0.0},{"mu":0.001,"mean_freq":[0.0,0.0,1.0],"coop_rate":1.0,"mean_payoff":3.0,"frac_time_alld_majority":0.0},{"mu":0.003,"mean_freq":[6.662225183211193e-05,0.0019986675549633582,0.9979347101932048],"coop_rate":0.9960067927178021,"mean_payoff":2.992612080509508,"frac_time_alld_majority":0.0},{"mu":0.01,"mean_freq":[0.03204530313124591,0.0041305796135909355,0.9638241172551634],"coop_rate":0.9918882681365879,"mean_payoff":2.985103247623948,"frac_time_alld_majority":0.0},{"mu":0.03,"mean_freq":[0.0459693537641571,0.024850099933377823,0.9291805463024655],"coop_rate":0.9520596706348562,"mean_payoff":2.912188753134155,"frac_time_alld_majority":0.0},{"mu":0.1,"mean_freq":[0.2055962691538975,0.27148567621585573,0.5229180546302468],"coop_rate":0.586549562117372,"mean_payoff":2.271504994893479,"frac_time_alld_majority":0.21985343104596936},{"mu":0.2,"mean_freq":[0.23857428381079337,0.3450366422385075,0.4163890739507019],"coop_rate":0.5112938698207453,"mean_payoff":2.1480054558342543,"frac_time_alld_majority":0.27781479013990673},{"mu":0.3,"mean_freq":[0.19833444370419617,0.4172551632245185,0.38441039307128916],"coop_rate":0.4223476154693254,"mean_payoff":1.9755704680113455,"frac_time_alld_majority":0.36575616255829446},{"mu":0.4,"mean_freq":[0.24923384410393085,0.3466355762824781,0.4041305796135909],"coop_rate":0.5132783873597927,"mean_payoff":2.1549759028069673,"frac_time_alld_majority":0.2005329780146569},{"mu":0.5,"mean_freq":[0.323584277148567,0.33364423717521663,0.3427714856762154],"coop_rate":0.5519920319609253,"mean_payoff":2.246255212492133,"frac_time_alld_majority":0.18254497001998668}],"evolution_noise":[{"eps":0.0,"dominant":"EXTORT2"},{"eps":0.005,"dominant":"EXTORT2"},{"eps":0.01,"dominant":"GRADUAL"},{"eps":0.02,"dominant":"EXTORT2"},{"eps":0.05,"dominant":"EXTORT2"},{"eps":0.1,"dominant":"EXTORT2"},{"eps":0.15,"dominant":"EXTORT2"}],"zd":{"extort2":[0.8888888888888888,0.5,0.33333333333333337,0.0],"zdgtft2":[1.0,0.125,1.0,0.25],"scatter":[{"opponent":"TFT","s_X":1.2322665585937054,"s_Y":1.1913274889135208},{"opponent":"GTFT","s_X":2.699168027561603,"s_Y":1.8527379114815876},{"opponent":"WSLS","s_X":2.2906478017209517,"s_Y":1.68496413105236},{"opponent":"STFT","s_X":1.2322665585937054,"s_Y":1.1913274889135208},{"opponent":"ALLC","s_X":3.50534970401228,"s_Y":2.2102499451874573},{"opponent":"ALLD","s_X":1.0136987197661993,"s_Y":1.0939030773592706},{"opponent":"EXTORT2","s_X":1.1592629749024395,"s_Y":1.1592629749024395},{"opponent":"ZDGTFT2","s_X":2.346589067513029,"s_Y":1.6950836645636467},{"opponent":"random","s_X":2.745879153203354,"s_Y":1.8729395766016763},{"opponent":"random","s_X":3.21051185507567,"s_Y":2.1052559275378333},{"opponent":"random","s_X":1.379697445253539,"s_Y":1.1898487226267664},{"opponent":"random","s_X":2.9617974625056327,"s_Y":1.980898731252817},{"opponent":"random","s_X":2.6673120356560904,"s_Y":1.8336560178280465},{"opponent":"random","s_X":3.0188478279309887,"s_Y":2.0094239139654935},{"opponent":"random","s_X":3.239638911199841,"s_Y":2.119819455599915},{"opponent":"random","s_X":2.3998602066047514,"s_Y":1.699930103302376},{"opponent":"random","s_X":1.5462894442055677,"s_Y":1.2731447221027854},{"opponent":"random","s_X":2.2556393457050037,"s_Y":1.6278196728525027},{"opponent":"random","s_X":1.7123430801434374,"s_Y":1.3561715400717187},{"opponent":"random","s_X":2.625359200752982,"s_Y":1.8126796003764893},{"opponent":"random","s_X":1.9172651928051003,"s_Y":1.4586325964025495},{"opponent":"random","s_X":2.5327243807227333,"s_Y":1.7663621903613675},{"opponent":"random","s_X":1.5022482880646817,"s_Y":1.2511241440323413},{"opponent":"random","s_X":2.7749293573811658,"s_Y":1.8874646786905835},{"opponent":"random","s_X":1.1216187225706469,"s_Y":1.0608093612853227},{"opponent":"random","s_X":2.2829610132301004,"s_Y":1.6414805066150513},{"opponent":"random","s_X":2.8708536921734322,"s_Y":1.9354268460867172},{"opponent":"random","s_X":2.797077231567683,"s_Y":1.8985386157838415},{"opponent":"random","s_X":2.330789548108121,"s_Y":1.6653947740540611},{"opponent":"random","s_X":2.757513840935748,"s_Y":1.8787569204678751},{"opponent":"random","s_X":2.6253659043012876,"s_Y":1.8126829521506442},{"opponent":"random","s_X":2.3180579518459217,"s_Y":1.6590289759229613},{"opponent":"random","s_X":2.4714513041024726,"s_Y":1.7357256520512356},{"opponent":"random","s_X":1.8794393344748475,"s_Y":1.4397196672374237},{"opponent":"random","s_X":2.5039940094351563,"s_Y":1.7519970047175777},{"opponent":"random","s_X":2.40810294950767,"s_Y":1.704051474753836},{"opponent":"random","s_X":2.997594727452125,"s_Y":1.998797363726061},{"opponent":"random","s_X":2.9322663945779226,"s_Y":1.966133197288961},{"opponent":"random","s_X":2.67916006705817,"s_Y":1.8395800335290857},{"opponent":"random","s_X":2.67391551240322,"s_Y":1.83695775620161},{"opponent":"random","s_X":1.7982649032983544,"s_Y":1.3991324516491774},{"opponent":"random","s_X":1.408321946819748,"s_Y":1.2041609734098724},{"opponent":"random","s_X":2.034465136092421,"s_Y":1.5172325680462102},{"opponent":"random","s_X":2.2555536049851073,"s_Y":1.6277768024925563},{"opponent":"random","s_X":2.1755707179575507,"s_Y":1.587785358978774},{"opponent":"random","s_X":1.6597125339032601,"s_Y":1.3298562669516318},{"opponent":"random","s_X":2.7830616439289426,"s_Y":1.8915308219644733},{"opponent":"random","s_X":2.598844534642308,"s_Y":1.799422267321154}],"learner_final":[{"opponent":"EXTORT2","seed":0,"final_learner":1.0416666666666667,"final_opponent":1.3333333333333333,"final_policy":[0.0,0.0,0.0,0.0]},{"opponent":"ZDGTFT2","seed":0,"final_learner":3.0166666666666666,"final_opponent":2.808333333333333,"final_policy":[1.0,1.0,0.0,1.0]},{"opponent":"TFT","seed":0,"final_learner":2.65,"final_opponent":2.65,"final_policy":[1.0,0.0,1.0,1.0]}],"evolution_final":{"ALLC":1.109522693627992e-164,"ALLD":9.001197350677663e-05,"TFT":1.5343247253368375e-83,"GTFT":1.3450682931906063e-21,"WSLS":0.9999099880264932,"EXTORT2":2.4776787073506534e-83,"ZDGTFT2":4.349402159201236e-21},"moran_dominant":"TFT"}};
+</script>
+<script>
+(function(){
+"use strict";
+if(!PAYLOAD){
+  var w=document.createElement("p");
+  w.className="err"; w.style.padding="20px";
+  w.textContent="No payload embedded. Build this page with scripts/build_app.py; app/template.html is a template, not a page.";
+  document.body.insertBefore(w, document.body.firstChild);
+  return;
+}
+/* ---------------------------------------------------------------- utils */
+var $ = function(id){ return document.getElementById(id); };
+var el = function(tag, cls, txt){ var e=document.createElement(tag); if(cls)e.className=cls;
+  if(txt!==undefined)e.textContent=txt; return e; };
+var fmt = function(x, d){ if(x===null||x===undefined||!isFinite(x)) return "—";
+  return Number(x).toFixed(d===undefined?2:d); };
+var pct = function(x){ return (100*x).toFixed(1)+"%"; };
+var clamp = function(x,a,b){ return x<a?a:(x>b?b:x); };
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function mulberry32(a){ return function(){
+  a |= 0; a = (a + 0x6D2B79F5) | 0;
+  var t = Math.imul(a ^ (a >>> 15), 1 | a);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}; }
+var redraws = [];
+function onRedraw(f){ redraws.push(f); f(); }
+function css(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+function theme(){ return { lapis:css("--lapis"), brick:css("--brick"), brass:css("--brass"),
+  ink:css("--ink"), muted:css("--muted"), panel:css("--panel"), line:css("--line") }; }
+function mix(a,b,t){ // hex lerp
+  function h(c){ return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)]; }
+  var A=h(a),B=h(b);
+  return "rgb("+Math.round(A[0]+(B[0]-A[0])*t)+","+Math.round(A[1]+(B[1]-A[1])*t)+","+
+    Math.round(A[2]+(B[2]-A[2])*t)+")";
+}
+function fitCanvas(cv){
+  var dpr = window.devicePixelRatio || 1;
+  var w = cv.width, h = cv.height;
+  if(!cv.dataset.cssW){ cv.dataset.cssW = w; cv.dataset.cssH = h; cv.style.width = w+"px"; cv.style.height = h+"px"; }
+  w = +cv.dataset.cssW; h = +cv.dataset.cssH;
+  if(cv.width !== Math.round(w*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+  var ctx = cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return { ctx: ctx, w: w, h: h };
+}
+function canvasPos(cv, ev){
+  var b = cv.getBoundingClientRect();
+  var t = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+  var w = +cv.dataset.cssW || b.width, h = +cv.dataset.cssH || b.height;
+  return { x: (t.clientX - b.left) * (w / b.width), y: (t.clientY - b.top) * (h / b.height),
+           w: w, h: h, sx: t.clientX - b.left, sy: t.clientY - b.top };
+}
+function tipAt(tip, host, x, y, text){
+  tip.textContent = text; tip.style.opacity = "1";
+  tip.style.left = Math.min(x+10, host.clientWidth-tip.offsetWidth-4)+"px";
+  tip.style.top = Math.max(0, y-28)+"px";
+}
+/* ---------------------------------------------------------------- theme */
+(function(){
+  var btn = $("theme-toggle"), modes = ["system","light","dark"], mode = "system";
+  try{ var s = localStorage.getItem("pdlab-theme"); if(s && modes.indexOf(s)>=0) mode = s; }catch(e){}
+  function apply(){
+    if(mode === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", mode);
+    btn.textContent = "Theme: " + mode;
+    for(var i=0;i<redraws.length;i++) redraws[i]();
+  }
+  btn.addEventListener("click", function(){
+    mode = modes[(modes.indexOf(mode)+1) % modes.length];
+    try{ localStorage.setItem("pdlab-theme", mode); }catch(e){}
+    apply();
+  });
+  if(window.matchMedia){
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var h = function(){ if(mode==="system") for(var i=0;i<redraws.length;i++) redraws[i](); };
+    if(mq.addEventListener) mq.addEventListener("change", h); else if(mq.addListener) mq.addListener(h);
+  }
+  apply();
+})();
+/* ------------------------------------------------------- payoffs (live) */
+var PM0 = PAYLOAD.payoffs;                       // canonical, from Python
+var pm = { T:PM0.T, R:PM0.R, P:PM0.P, S:PM0.S }; // live, user-editable
+var pmListeners = [];
+function onPm(f){ pmListeners.push(f); }
+function pmChanged(){ for(var i=0;i<pmListeners.length;i++) pmListeners[i](); }
+function payoff(own, opp, m){ m = m || PM0;
+  return own==="C" ? (opp==="C" ? m.R : m.S) : (opp==="C" ? m.T : m.P); }
+
+var thresholdsOf = function(m){
+  return {
+    grim: (m.T-m.R)/(m.T-m.P),
+    alt:  (m.T-m.R)/(m.R-m.S),
+    nash: Math.max((m.T-m.R)/(m.T-m.P), (m.T-m.R)/(m.R-m.S)),
+    dd:   (m.P-m.S)/(m.T-m.P)
+  };
+};
+(function payoffInstrument(){
+  var keys = ["T","R","P","S"], inputs = {};
+  keys.forEach(function(k){ inputs[k] = $("in-"+k); inputs[k].value = pm[k]; });
+  var cells = { R:$("cell-R"), S:$("cell-S"), T:$("cell-T"), P:$("cell-P") };
+  var errEl = $("matrix-err");
+
+  function validate(){
+    var msgs = [];
+    if(!(pm.T > pm.R)) msgs.push("T must be larger than R: defecting on a cooperator has to tempt.");
+    if(!(pm.R > pm.P)) msgs.push("R must be larger than P: mutual cooperation has to beat mutual defection.");
+    if(!(pm.P > pm.S)) msgs.push("P must be larger than S: being exploited has to be the worst outcome.");
+    if(!(2*pm.R > pm.T + pm.S)) msgs.push("2R must exceed T + S: otherwise taking turns exploiting beats cooperating.");
+    errEl.textContent = msgs.length ? msgs[0] : "";
+    return msgs.length === 0;
+  }
+  function relations(){
+    var chain = $("chain"); chain.textContent = "";
+    var rels = [
+      ["T > R", pm.T > pm.R], ["R > P", pm.R > pm.P], ["P > S", pm.P > pm.S],
+      ["2R > T + S", 2*pm.R > pm.T + pm.S]
+    ];
+    rels.forEach(function(r){
+      var s = el("span", "rel" + (r[1] ? "" : " bad"), r[0]);
+      s.setAttribute("title", r[1] ? "holds" : "violated");
+      chain.appendChild(s);
+    });
+    var chips = $("oneshot-chips"); chips.textContent = "";
+    var dDom = pm.T > pm.R && pm.P > pm.S;
+    [["D strictly dominates", dDom],
+     ["(D,D) unique Nash", dDom],
+     ["(C,C) Pareto-dominates (D,D)", pm.R > pm.P]
+    ].forEach(function(c){
+      chips.appendChild(el("span", "chip " + (c[1] ? "ok" : "no"), c[0] + (c[1] ? " · yes" : " · no")));
+    });
+    var d = $("derived-chips"); d.textContent = "";
+    d.appendChild(el("span","chip", "defecting gains T−R = " + fmt(pm.T-pm.R) + " against a cooperator"));
+    d.appendChild(el("span","chip", "and P−S = " + fmt(pm.P-pm.S) + " against a defector"));
+    $("br-line").textContent = "against C play " + (pm.T > pm.R ? "D" : "C") +
+      " · against D play " + (pm.P > pm.S ? "D" : "C");
+    var th = thresholdsOf(pm);
+    $("ro-grim").textContent = fmt(th.grim, 3);
+    $("ro-tft").textContent = fmt(th.nash, 3);
+    $("ro-dd").textContent = fmt(th.dd, 3);
+    var mirrors = document.querySelectorAll("[data-mirror]");
+    for(var i=0;i<mirrors.length;i++) mirrors[i].textContent = fmt(pm[mirrors[i].getAttribute("data-mirror")], 1);
+  }
+  function refresh(){ validate(); relations(); pmChanged(); }
+
+  keys.forEach(function(k){
+    inputs[k].addEventListener("input", function(){
+      var v = parseFloat(inputs[k].value);
+      if(isNaN(v)) { errEl.textContent = k + " must be a number."; return; }
+      pm[k] = v; refresh();
+    });
+  });
+  $("reset-axelrod").addEventListener("click", function(){
+    pm.T = 5; pm.R = 3; pm.P = 1; pm.S = 0;
+    keys.forEach(function(k){ inputs[k].value = pm[k]; });
+    refresh();
+  });
+  $("py-grim").textContent = fmt(PAYLOAD.thresholds.grim_spe, 3);
+  $("py-tft").textContent = fmt(PAYLOAD.thresholds.tft_nash, 3);
+  $("py2-grim").textContent = fmt(PAYLOAD.thresholds.grim_spe, 3);
+  $("py2-tft").textContent = fmt(PAYLOAD.thresholds.tft_nash, 3);
+  $("py2-dd").textContent = fmt(PAYLOAD.thresholds.tft_after_dd_max, 3);
+  refresh();
+
+  // the one orchestrated moment: the cells write themselves in
+  var divs = document.querySelectorAll("#matrix .cell");
+  for(var i=0;i<divs.length;i++){
+    (function(d, i){
+      if(REDUCED) d.classList.add("written");
+      else setTimeout(function(){ d.classList.add("written"); }, 120 + 60*i);
+    })(divs[i], i);
+  }
+  window.__cells = cells;
+})();
+/* ------------------------------------------------------- strategies (JS) */
+/* Semantics mirror src/pdlab/strategies.py exactly.  Memory-one order is
+   (own,opp) = CC, CD, DC, DD; p == 1 or 0 short-circuits without drawing. */
+function memOne(p, initial){
+  var own = null, opp = null;
+  return {
+    play: function(rng){
+      var pr = (own === null) ? initial : p[(own === "C" ? 0 : 2) + (opp === "C" ? 0 : 1)];
+      if(pr === 1) return "C";
+      if(pr === 0) return "D";
+      return rng() < pr ? "C" : "D";
+    },
+    observe: function(o, q){ own = o; opp = q; }
+  };
+}
+var GTFT_G = Math.min(1 - (PM0.T-PM0.R)/(PM0.R-PM0.S), (PM0.R-PM0.P)/(PM0.T-PM0.P));
+var STRATS = [
+  { name:"ALLC", group:"nice", desc:"always cooperates",
+    make:function(){ return memOne([1,1,1,1],1); } },
+  { name:"TFT", group:"nice", desc:"copies your last move",
+    make:function(){ return memOne([1,0,1,0],1); } },
+  { name:"GTFT", group:"nice", desc:"TFT, forgives with probability g = "+fmt(GTFT_G,3),
+    make:function(){ return memOne([1,GTFT_G,1,GTFT_G],1); } },
+  { name:"TF2T", group:"nice", desc:"defects only after two defections in a row",
+    make:function(){ var opp=[]; return {
+      play:function(){ return (opp.length>=2 && opp[opp.length-1]==="D" && opp[opp.length-2]==="D") ? "D":"C"; },
+      observe:function(o,q){ opp.push(q); } }; } },
+  { name:"GRIM", group:"nice", desc:"cooperates until crossed once, then never again",
+    make:function(){ var t=false; return { play:function(){ return t?"D":"C"; },
+      observe:function(o,q){ if(q==="D") t=true; } }; } },
+  { name:"WSLS", group:"nice", desc:"Pavlov: repeat after R or T, switch otherwise",
+    make:function(){ return memOne([1,0,0,1],1); } },
+  { name:"CTFT", group:"nice", desc:"contrite TFT: apologises for its own slips",
+    make:function(){ var opp=[], contrite=false, intended="C"; return {
+      play:function(){
+        if(opp.length===0) intended="C";
+        else if(contrite) intended="C";
+        else intended = opp[opp.length-1];
+        return intended;
+      },
+      observe:function(o,q){
+        opp.push(q);
+        if(contrite){ if(o==="C") contrite=false; }
+        else if(o==="D" && intended==="C" && q==="C") contrite=true;
+      } }; } },
+  { name:"SOFTMAJ", group:"nice", desc:"cooperates while you have cooperated at least as often",
+    make:function(){ var nc=0, n=0; return {
+      play:function(){ return nc >= n-nc ? "C":"D"; },
+      observe:function(o,q){ n++; if(q==="C") nc++; } }; } },
+  { name:"GRADUAL", group:"nice", desc:"punishes k defections with k, then offers two olive branches",
+    make:function(){ var nd=0, queue=[]; return {
+      play:function(){ return queue.length ? queue.shift() : "C"; },
+      observe:function(o,q){ if(q==="D" && queue.length===0){ nd++;
+        queue=[]; for(var i=0;i<nd;i++) queue.push("D"); queue.push("C"); queue.push("C"); } } }; } },
+  { name:"ALLD", group:"nasty", desc:"always defects",
+    make:function(){ return memOne([0,0,0,0],0); } },
+  { name:"STFT", group:"nasty", desc:"TFT that opens with D",
+    make:function(){ return memOne([1,0,1,0],0); } },
+  { name:"HARDMAJ", group:"nasty", desc:"cooperates only while you have cooperated strictly more",
+    make:function(){ var nc=0, n=0; return {
+      play:function(){ return nc > n-nc ? "C":"D"; },
+      observe:function(o,q){ n++; if(q==="C") nc++; } }; } },
+  { name:"PROBER", group:"nasty", desc:"D, C, C — then exploits a pushover, else plays TFT",
+    make:function(){ var own=[], opp=[], exploit=false; return {
+      play:function(){
+        var n = own.length;
+        if(n === 0) return "D";
+        if(n === 1 || n === 2) return "C";
+        if(n === 3) exploit = (opp[1]==="C" && opp[2]==="C");
+        if(exploit) return "D";
+        return opp[opp.length-1];
+      },
+      observe:function(o,q){ own.push(o); opp.push(q); } }; } },
+  { name:"EXTORT2", group:"zd", desc:"extortionate ZD, p = "+PAYLOAD.zd.extort2.map(function(x){return fmt(x,3);}).join(", "),
+    make:function(){ return memOne(PAYLOAD.zd.extort2, 0); } },
+  { name:"ZDGTFT2", group:"zd", desc:"generous ZD, p = "+PAYLOAD.zd.zdgtft2.map(function(x){return fmt(x,3);}).join(", "),
+    make:function(){ return memOne(PAYLOAD.zd.zdgtft2, 1); } },
+  { name:"RANDOM", group:"classic", desc:"coin flip every round",
+    make:function(){ return memOne([0.5,0.5,0.5,0.5],0.5); } },
+  { name:"ALT", group:"classic", desc:"C, D, C, D, ...",
+    make:function(){ var n=0; return { play:function(){ return n%2===0 ? "C":"D"; },
+      observe:function(){ n++; } }; } }
+];
+var GROUP_LABEL = { nice:"nice", nasty:"nasty", zd:"zero-determinant", classic:"classic" };
+function stratByName(n){ for(var i=0;i<STRATS.length;i++) if(STRATS[i].name===n) return STRATS[i]; return null; }
+/* ------------------------------------------------------------ hero game */
+(function heroGame(){
+  var opp = null, oppLast = null, rounds = 0, sMe = 0, sThem = 0;
+  var msg = $("hero-msg"), scoreEl = $("hero-score"), roundEl = $("hero-round"), reveal = $("hero-reveal");
+  function reset(){
+    opp = stratByName("TFT").make(); rounds = 0; sMe = 0; sThem = 0; oppLast = null;
+    clearHl(); msg.textContent = "Pick one. The hidden strategy has already picked.";
+    scoreEl.textContent = "you 0 · them 0"; roundEl.textContent = "Round 1 against a hidden strategy.";
+    reveal.textContent = "";
+  }
+  function clearHl(){
+    ["cell-R","cell-S","cell-T","cell-P"].forEach(function(id){ $(id).classList.remove("hl"); });
+  }
+  function step(mine){
+    var theirs = opp.play(Math.random);
+    var a = payoff(mine, theirs, pm), b = payoff(theirs, mine, pm);
+    opp.observe(theirs, mine, b);
+    sMe += a; sThem += b; rounds++;
+    clearHl();
+    $("cell-" + (mine==="C" ? (theirs==="C" ? "R" : "S") : (theirs==="C" ? "T" : "P"))).classList.add("hl");
+    var line;
+    if(mine==="D" && theirs==="C")
+      line = "You defected against a cooperator: " + fmt(pm.T,1) + " points now, but TFT remembers.";
+    else if(mine==="C" && theirs==="C")
+      line = "You both cooperated: " + fmt(pm.R,1) + " each, and nothing is owed.";
+    else if(mine==="C" && theirs==="D")
+      line = "You cooperated into a defection: " + fmt(pm.S,1) + " for you, " + fmt(pm.T,1) + " for them. That is the echo of your last move.";
+    else
+      line = "Mutual defection: " + fmt(pm.P,1) + " each. Worse for both of you than cooperating, and neither of you can fix it alone.";
+    msg.textContent = line;
+    scoreEl.textContent = "you " + fmt(sMe,1) + " · them " + fmt(sThem,1);
+    roundEl.textContent = "Round " + (rounds+1) + " — they played " + theirs + " last round.";
+    if(rounds >= 3 && !reveal.textContent)
+      reveal.textContent = "The hidden strategy is Tit-for-Tat: cooperate first, then copy you.";
+    oppLast = theirs;
+  }
+  $("hero-c").addEventListener("click", function(){ step("C"); });
+  $("hero-d").addEventListener("click", function(){ step("D"); });
+  $("hero-reset").addEventListener("click", reset);
+  reset();
+})();
+/* ------------------------------------------------------ bench 2: play */
+(function playBench(){
+  var oppSel = $("opp-select"), meSel = $("me-select");
+  var groups = ["nice","nasty","zd","classic"];
+  groups.forEach(function(g){
+    var og1 = el("optgroup"), og2 = el("optgroup");
+    og1.label = GROUP_LABEL[g]; og2.label = GROUP_LABEL[g];
+    STRATS.forEach(function(s){
+      if(s.group !== g) return;
+      var o1 = el("option", null, s.name); o1.value = s.name;
+      var o2 = el("option", null, s.name); o2.value = s.name;
+      og1.appendChild(o1); og2.appendChild(o2);
+    });
+    oppSel.appendChild(og1); meSel.appendChild(og2);
+  });
+  oppSel.value = "TFT";
+  $("play-pm").textContent = "T=" + fmt(PM0.T,0) + ", R=" + fmt(PM0.R,0) + ", P=" + fmt(PM0.P,0) + ", S=" + fmt(PM0.S,0);
+
+  var st = null;
+  function reset(){
+    var seed = parseInt($("seed-play").value, 10); if(isNaN(seed)) seed = 1;
+    st = { rng: mulberry32(seed), opp: stratByName(oppSel.value).make(), me: null,
+           n:0, sMe:0, sThem:0, cMe:0, rows:[[],[]] };
+    if(meSel.value !== "__me") st.me = stratByName(meSel.value).make();
+    $("hist-me").textContent = ""; $("hist-them").textContent = "";
+    $("play-idle").textContent = meSel.value === "__me"
+      ? "Pick an opponent and play 20 rounds — " + stratByName(oppSel.value).desc + "."
+      : "Auto-play to compare " + meSel.value + " against " + oppSel.value + " with Python.";
+    $("play-opp-label").textContent = oppSel.value;
+    $("play-compare").textContent = "Auto-play to compare with the Python tournament matrix.";
+    render();
+  }
+  function tile(m, flipped){
+    var t = el("div", "tile " + m + (flipped ? " flip" : ""), m);
+    t.title = flipped ? "noise flipped this move" : "";
+    return t;
+  }
+  function round(mineIntended){
+    var theirsIntended = st.opp.play(st.rng);
+    var eps = parseFloat($("noise-play").value);
+    var mine = mineIntended, theirs = theirsIntended, f1 = false, f2 = false;
+    if(eps > 0){
+      var u0 = st.rng(), u1 = st.rng();
+      if(u0 < eps){ mine = mine === "C" ? "D" : "C"; f1 = true; }
+      if(u1 < eps){ theirs = theirs === "C" ? "D" : "C"; f2 = true; }
+    }
+    var a = payoff(mine, theirs, PM0), b = payoff(theirs, mine, PM0);
+    if(st.me) st.me.observe(mine, theirs, a);
+    st.opp.observe(theirs, mine, b);
+    st.n++; st.sMe += a; st.sThem += b; if(mine === "C") st.cMe++;
+    $("hist-me").appendChild(tile(mine, f1));
+    $("hist-them").appendChild(tile(theirs, f2));
+  }
+  function render(){
+    $("play-rounds").textContent = st.n;
+    $("play-score-me").textContent = fmt(st.sMe,1) + " total · " + fmt(st.n ? st.sMe/st.n : 0) + " / round";
+    $("play-score-them").textContent = fmt(st.sThem,1) + " total · " + fmt(st.n ? st.sThem/st.n : 0) + " / round";
+    $("play-coop").textContent = st.n ? pct(st.cMe/st.n) : "—";
+    $("hist-sr").textContent = st.n ? ("Round " + st.n + ": you " + fmt(st.n?st.sMe/st.n:0) +
+      " per round, " + oppSel.value + " " + fmt(st.n?st.sThem/st.n:0) + " per round.") : "";
+  }
+  function manual(m){
+    if(meSel.value !== "__me"){ $("play-idle").textContent =
+      "You are auto-playing " + meSel.value + ". Set “you play” to “by hand” to move yourself."; return; }
+    round(m); render();
+  }
+  $("play-c").addEventListener("click", function(){ manual("C"); });
+  $("play-d").addEventListener("click", function(){ manual("D"); });
+  $("play-reset").addEventListener("click", reset);
+  oppSel.addEventListener("change", reset);
+  meSel.addEventListener("change", reset);
+  $("seed-play").addEventListener("change", reset);
+  $("noise-play").addEventListener("input", function(){
+    $("noise-play-val").textContent = fmt(parseFloat($("noise-play").value));
+  });
+  $("play-auto").addEventListener("click", function(){
+    if(meSel.value === "__me"){
+      $("play-idle").textContent = "Choose a strategy in “you play” first — auto-play needs a policy.";
+      return;
+    }
+    reset();
+    for(var i=0;i<200;i++) round(st.me.play(st.rng));
+    render();
+    var names = PAYLOAD.payoff_matrix.names;
+    var i1 = names.indexOf(meSel.value), i2 = names.indexOf(oppSel.value);
+    var here = st.sMe/st.n;
+    var eps = parseFloat($("noise-play").value);
+    if(i1 >= 0 && i2 >= 0){
+      var py = PAYLOAD.payoff_matrix.values[i1][i2];
+      $("play-compare").textContent = meSel.value + " vs " + oppSel.value + " — Python: " + fmt(py) +
+        " · here: " + fmt(here) +
+        (eps > 0 ? " (Python's matrix is noiseless; set ε to 0 to compare)" : "");
+    } else {
+      $("play-compare").textContent = "here: " + fmt(here) + " per round.";
+    }
+  });
+  reset();
+})();
+/* ------------------------------------------------ bench 3: tournament */
+(function tournamentBench(){
+  var keys = ["0.0","0.01","0.05","0.1"];
+  var lb = PAYLOAD.leaderboards;
+  var current = keys[0], raced = false;
+  var maxScore = 0;
+  keys.forEach(function(k){ (lb[k]||[]).forEach(function(r){ if(r.score + (r.score_sd||0) > maxScore) maxScore = r.score + (r.score_sd||0); }); });
+  var seg = $("noise-seg");
+  keys.forEach(function(k){
+    var b = el("button", null, "ε = " + k);
+    b.setAttribute("aria-pressed", k === current ? "true" : "false");
+    b.addEventListener("click", function(){
+      current = k;
+      var bs = seg.querySelectorAll("button");
+      for(var i=0;i<bs.length;i++) bs[i].setAttribute("aria-pressed", keys[i] === k ? "true" : "false");
+      draw(true);
+    });
+    seg.appendChild(b);
+  });
+  var host = $("leaderboard");
+  var rowH = 20, rows = {};
+  var names = PAYLOAD.payoff_matrix.names;
+  host.style.position = "relative";
+  host.style.height = (names.length * rowH + 4) + "px";
+  names.forEach(function(n){
+    var r = el("div", "bar");
+    r.style.position = "absolute"; r.style.left = "0"; r.style.right = "0"; r.style.top = "0";
+    r.style.transition = REDUCED ? "none" : "transform .55s cubic-bezier(.2,.7,.3,1)";
+    var lab = el("div", null, n), track = el("div", "track"), val = el("div", null, "");
+    var fill = el("div", "fill"), whisk = el("div", "whisk");
+    fill.style.transition = REDUCED ? "none" : "width .7s cubic-bezier(.2,.7,.3,1), background-color .4s";
+    track.appendChild(fill); track.appendChild(whisk);
+    r.appendChild(lab); r.appendChild(track); r.appendChild(val);
+    host.appendChild(r);
+    rows[n] = { row:r, fill:fill, whisk:whisk, val:val };
+  });
+  function draw(animate){
+    var data = lb[current] || [];
+    data.forEach(function(d){
+      var r = rows[d.strategy]; if(!r) return;
+      r.row.style.transform = "translateY(" + ((d.rank-1)*rowH) + "px)";
+      var w = (animate || raced || REDUCED) ? (100*d.score/maxScore) : 0;
+      r.fill.style.width = w + "%";
+      r.fill.style.background = mix(css("--lapis"), css("--brick"), clamp(1 - d.coop_rate, 0, 1));
+      r.val.textContent = fmt(d.score);
+      var lo = clamp(100*(d.score - d.score_sd)/maxScore, 0, 100),
+          hi = clamp(100*(d.score + d.score_sd)/maxScore, 0, 100);
+      r.whisk.style.left = lo + "%"; r.whisk.style.width = (hi - lo) + "%";
+      r.row.setAttribute("title", d.strategy + ": " + fmt(d.score) + " ± " + fmt(d.score_sd,3) +
+        " per round, cooperation " + pct(d.coop_rate));
+    });
+    $("ldr-winner").textContent = data.length ? data[0].strategy : "—";
+    $("ldr-score").textContent = data.length ? fmt(data[0].score) + " ± " + fmt(data[0].score_sd,3) : "—";
+    $("ldr-coop").textContent = data.length ? pct(data[0].coop_rate) : "—";
+    $("ldr-last").textContent = data.length ? data[data.length-1].strategy + " · " + fmt(data[data.length-1].score) : "—";
+  }
+  draw(REDUCED);
+  if(REDUCED){ raced = true; }
+  else if(window.IntersectionObserver){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && !raced){ raced = true; draw(true); io.disconnect(); }
+      });
+    }, { threshold: 0.25 });
+    io.observe(host);
+  } else { raced = true; draw(true); }
+
+  // heatmap
+  var cv = $("heat"), tip = $("heat-tip"), V = PAYLOAD.payoff_matrix.values;
+  var pad = 46, n = names.length;
+  var lo = Infinity, hi = -Infinity;
+  V.forEach(function(row){ row.forEach(function(v){ if(v<lo) lo=v; if(v>hi) hi=v; }); });
+  var cell;
+  function drawHeat(){
+    var c = fitCanvas(cv), ctx = c.ctx, t = theme();
+    cell = (c.w - pad - 4) / n;
+    ctx.font = "8px " + "ui-monospace, Menlo, monospace";
+    ctx.fillStyle = t.muted;
+    for(var i=0;i<n;i++){
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText(names[i], pad - 4, pad + cell*(i+0.5));
+      ctx.save();
+      ctx.translate(pad + cell*(i+0.5), pad - 4);
+      ctx.rotate(-Math.PI/2);
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(names[i], 0, 0);
+      ctx.restore();
+    }
+    for(var r=0;r<n;r++) for(var k=0;k<n;k++){
+      var v = (V[r][k] - lo) / (hi - lo || 1);
+      ctx.fillStyle = mix(t.brick, t.lapis, v);
+      ctx.fillRect(pad + cell*k, pad + cell*r, cell-0.6, cell-0.6);
+    }
+    ctx.strokeStyle = t.line;
+    ctx.strokeRect(pad, pad, cell*n, cell*n);
+  }
+  onRedraw(drawHeat);
+  cv.addEventListener("mousemove", function(ev){
+    var q = canvasPos(cv, ev), x = q.x, y = q.y;
+    var k = Math.floor((x - pad)/cell), r = Math.floor((y - pad)/cell);
+    if(r>=0 && r<n && k>=0 && k<n){
+      var txt = names[r] + " vs " + names[k] + ": " + fmt(V[r][k]);
+      tipAt(tip, cv.parentNode, q.sx, q.sy, txt);
+      $("heat-readout").textContent = txt + " per round (row's payoff).";
+    } else { tip.style.opacity = "0"; }
+  });
+  cv.addEventListener("mouseleave", function(){ tip.style.opacity = "0"; });
+})();
+/* ----------------------------------------------- bench 4: replicator */
+(function simplexBench(){
+  var A = PAYLOAD.replicator.A, xstar = PAYLOAD.replicator.x_star;
+  var cv = $("simplex");
+  var W = 440, H = 400, pad = 34;
+  var V0 = [pad, H-pad], V1 = [W-pad, H-pad], V2 = [W/2, pad];  // ALLC, ALLD, TFT
+  var start = [0.30, 0.55, 0.15];
+  function toXY(x){
+    return [x[0]*V0[0] + x[1]*V1[0] + x[2]*V2[0], x[0]*V0[1] + x[1]*V1[1] + x[2]*V2[1]];
+  }
+  function fromXY(px, py){
+    // invert barycentric (V0,V1,V2)
+    var d = (V1[1]-V2[1])*(V0[0]-V2[0]) + (V2[0]-V1[0])*(V0[1]-V2[1]);
+    var a = ((V1[1]-V2[1])*(px-V2[0]) + (V2[0]-V1[0])*(py-V2[1]))/d;
+    var b = ((V2[1]-V0[1])*(px-V2[0]) + (V0[0]-V2[0])*(py-V2[1]))/d;
+    var c = 1 - a - b;
+    return norm([clamp(a,0,1), clamp(b,0,1), clamp(c,0,1)]);
+  }
+  function norm(x){ var s = x[0]+x[1]+x[2]; if(s<=0) return [1/3,1/3,1/3];
+    return [x[0]/s, x[1]/s, x[2]/s]; }
+  function rhs(x){
+    var f = [0,0,0], phi = 0, i, j;
+    for(i=0;i<3;i++){ for(j=0;j<3;j++) f[i] += A[i][j]*x[j]; }
+    for(i=0;i<3;i++) phi += x[i]*f[i];
+    return [x[0]*(f[0]-phi), x[1]*(f[1]-phi), x[2]*(f[2]-phi)];
+  }
+  function add(x, k, d){ return [x[0]+k*d[0], x[1]+k*d[1], x[2]+k*d[2]]; }
+  function trajectory(x0){
+    var dt = 0.05, steps = Math.round(80/dt), x = x0.slice(), pts = [x.slice()];
+    for(var s=0;s<steps;s++){
+      var k1 = rhs(x), k2 = rhs(add(x, dt/2, k1)), k3 = rhs(add(x, dt/2, k2)), k4 = rhs(add(x, dt, k3));
+      x = [ x[0] + dt/6*(k1[0]+2*k2[0]+2*k3[0]+k4[0]),
+            x[1] + dt/6*(k1[1]+2*k2[1]+2*k3[1]+k4[1]),
+            x[2] + dt/6*(k1[2]+2*k2[2]+2*k3[2]+k4[2]) ];
+      x = norm([Math.max(0,x[0]), Math.max(0,x[1]), Math.max(0,x[2])]);
+      if(s % 4 === 0) pts.push(x.slice());
+    }
+    pts.push(x.slice());
+    return pts;
+  }
+  function eigTxt(k){
+    var e = PAYLOAD.replicator.eigenvalues[k] || [];
+    return e.map(function(v){ return fmt(Math.abs(v) < 1e-9 ? 0 : v, 3); }).join(", ");
+  }
+  function draw(){
+    var c = fitCanvas(cv), ctx = c.ctx, t = theme();
+    ctx.lineWidth = 1; ctx.strokeStyle = t.line;
+    // triangle
+    ctx.beginPath(); ctx.moveTo(V0[0],V0[1]); ctx.lineTo(V1[0],V1[1]); ctx.lineTo(V2[0],V2[1]);
+    ctx.closePath(); ctx.strokeStyle = t.muted; ctx.stroke();
+    // neutral line of fixed points: ALLC-TFT edge
+    ctx.save();
+    ctx.setLineDash([4,4]); ctx.strokeStyle = t.lapis; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(V0[0],V0[1]); ctx.lineTo(V2[0],V2[1]); ctx.stroke();
+    ctx.restore();
+    // labels
+    ctx.font = "12px ui-monospace, Menlo, monospace"; ctx.fillStyle = t.ink;
+    ctx.textAlign="center";
+    ctx.fillText("ALLC", V0[0]+4, V0[1]+16);
+    ctx.fillText("ALLD", V1[0]-4, V1[1]+16);
+    ctx.fillText("TFT",  V2[0], V2[1]-8);
+    // trajectory
+    var pts = trajectory(start);
+    ctx.beginPath();
+    pts.forEach(function(p, i){ var q = toXY(p); if(i===0) ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]); });
+    ctx.strokeStyle = t.brass; ctx.lineWidth = 2; ctx.stroke();
+    // arrow head at end
+    var last = toXY(pts[pts.length-1]);
+    ctx.fillStyle = t.brass; ctx.beginPath(); ctx.arc(last[0], last[1], 4, 0, 2*Math.PI); ctx.fill();
+    // fixed points
+    function dot(p, col, r){ var q = toXY(p); ctx.beginPath(); ctx.arc(q[0],q[1],r||4,0,2*Math.PI);
+      ctx.fillStyle = col; ctx.fill(); }
+    dot([1,0,0], t.lapis); dot([0,1,0], t.brick); dot([0,0,1], t.lapis);
+    dot([0, 1-xstar, xstar], t.brass, 5);
+    var q = toXY([0, 1-xstar, xstar]);
+    ctx.fillStyle = t.muted; ctx.textAlign = "right";
+    ctx.fillText("x* = " + fmt(xstar,3), q[0]-8, q[1]+4);
+    // start handle
+    var s = toXY(start);
+    ctx.beginPath(); ctx.arc(s[0], s[1], 7, 0, 2*Math.PI);
+    ctx.strokeStyle = t.ink; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = t.panel; ctx.fill();
+    // readout
+    var endp = pts[pts.length-1];
+    $("sim-start").textContent = "ALLC " + fmt(start[0]) + " · ALLD " + fmt(start[1]) + " · TFT " + fmt(start[2]);
+    $("sim-end").textContent   = "ALLC " + fmt(endp[0]) + " · ALLD " + fmt(endp[1]) + " · TFT " + fmt(endp[2]);
+    $("sim-verdict").textContent = endp[1] > 0.5 ? "ALLD wins" : "cooperation survives";
+    cv.setAttribute("aria-label", "Ternary simplex. Start ALLC " + fmt(start[0]) + ", ALLD " + fmt(start[1]) +
+      ", TFT " + fmt(start[2]) + "; at t = 80 the population is ALLD " + fmt(endp[1]) + ".");
+  }
+  $("sim-xstar").textContent = fmt(xstar, 4);
+  $("sim-eig-alld").textContent = eigTxt("ALLD");
+  $("sim-eig-tft").textContent = eigTxt("TFT");
+  $("sim-delta").textContent = fmt(PAYLOAD.replicator.delta, 2);
+  var ess = PAYLOAD.replicator.ess;
+  $("sim-ess").textContent = ["ALLC","ALLD","TFT"].map(function(k){
+    return k + " " + (ess[k] ? "yes" : "no"); }).join(" · ");
+  var dragging = false;
+  function pointFromEvent(ev){
+    var q = canvasPos(cv, ev);
+    return fromXY(q.x, q.y);
+  }
+  function grab(ev){ dragging = true; start = pointFromEvent(ev); draw(); ev.preventDefault(); }
+  function move(ev){ if(!dragging) return; start = pointFromEvent(ev); draw(); ev.preventDefault(); }
+  function drop(){ dragging = false; }
+  cv.addEventListener("mousedown", grab);
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", drop);
+  cv.addEventListener("touchstart", grab, {passive:false});
+  cv.addEventListener("touchmove", move, {passive:false});
+  cv.addEventListener("touchend", drop);
+  cv.addEventListener("keydown", function(ev){
+    var d = 0.02, k = ev.key, s = start.slice();
+    if(k === "ArrowLeft"){ s[0]+=d; s[1]-=d; }
+    else if(k === "ArrowRight"){ s[0]-=d; s[1]+=d; }
+    else if(k === "ArrowUp"){ s[2]+=d; s[1]-=d/2; s[0]-=d/2; }
+    else if(k === "ArrowDown"){ s[2]-=d; s[1]+=d/2; s[0]+=d/2; }
+    else return;
+    ev.preventDefault();
+    start = norm([clamp(s[0],0,1), clamp(s[1],0,1), clamp(s[2],0,1)]);
+    draw();
+  });
+  $("sim-alld").addEventListener("click", function(){ start = [0.02, 0.96, 0.02]; draw(); });
+  $("sim-star").addEventListener("click", function(){ start = [0.0, 1-(xstar+0.02), xstar+0.02]; draw(); });
+  $("sim-mix").addEventListener("click", function(){ start = [1/3,1/3,1/3]; draw(); });
+  onRedraw(draw);
+})();
+/* -------------------------------------------------- bench 5: lattice */
+(function latticeBench(){
+  var L = 80, cv = $("lattice"), spark = $("lat-spark");
+  var grid = new Uint8Array(L*L), sc = new Float64Array(L*L), next = new Uint8Array(L*L);
+  var b = 1.9, periodic = true, sync = true, gen = 0, series = [], playing = false, rng = mulberry32(7);
+  var off = [], di, dj;
+  for(di=-1;di<=1;di++) for(dj=-1;dj<=1;dj++) if(!(di===0&&dj===0)) off.push([di,dj]);
+  var buf = document.createElement("canvas"); buf.width = L; buf.height = L;
+  var img = buf.getContext("2d").createImageData(L, L);
+
+  function idx(i,j){ return i*L + j; }
+  function reset(){
+    gen = 0; series = []; rng = mulberry32(7);
+    var mode = $("lat-start").value;
+    if(mode === "single"){
+      grid.fill(1); grid[idx(L>>1, L>>1)] = 0;
+    } else {
+      for(var k=0;k<L*L;k++) grid[k] = rng() < 0.9 ? 1 : 0;
+    }
+    series.push(coop()); render();
+  }
+  function coop(){ var s=0; for(var k=0;k<L*L;k++) s += grid[k]; return s/(L*L); }
+  function neighbourCoops(i, j){
+    var n = grid[idx(i,j)] ? 1 : 0;   // self-interaction (cooperator only adds itself)
+    for(var k=0;k<8;k++){
+      var ii = i + off[k][0], jj = j + off[k][1];
+      if(periodic){ ii = (ii + L) % L; jj = (jj + L) % L; }
+      else if(ii < 0 || ii >= L || jj < 0 || jj >= L) continue;
+      if(grid[idx(ii,jj)]) n++;
+    }
+    return n;
+  }
+  function localScore(i, j){
+    var n = neighbourCoops(i, j);
+    return grid[idx(i,j)] ? n : b * n;
+  }
+  function stepSync(){
+    var i, j, k;
+    for(i=0;i<L;i++) for(j=0;j<L;j++) sc[idx(i,j)] = localScore(i,j);
+    for(i=0;i<L;i++) for(j=0;j<L;j++){
+      var best = sc[idx(i,j)], strat = grid[idx(i,j)];
+      for(k=0;k<8;k++){
+        var ii = i + off[k][0], jj = j + off[k][1];
+        if(periodic){ ii = (ii + L) % L; jj = (jj + L) % L; }
+        else if(ii < 0 || ii >= L || jj < 0 || jj >= L) continue;
+        var s = sc[idx(ii,jj)];
+        if(s > best){ best = s; strat = grid[idx(ii,jj)]; }   // strict: ties keep current
+      }
+      next[idx(i,j)] = strat;
+    }
+    grid.set(next);
+  }
+  function stepAsync(){
+    for(var t=0;t<L*L;t++){
+      var i = Math.floor(rng()*L), j = Math.floor(rng()*L);
+      var best = localScore(i,j), strat = grid[idx(i,j)];
+      for(var k=0;k<8;k++){
+        var ii = i + off[k][0], jj = j + off[k][1];
+        if(periodic){ ii = (ii + L) % L; jj = (jj + L) % L; }
+        else if(ii < 0 || ii >= L || jj < 0 || jj >= L) continue;
+        var s = localScore(ii,jj);
+        if(s > best){ best = s; strat = grid[idx(ii,jj)]; }
+      }
+      grid[idx(i,j)] = strat;
+    }
+  }
+  function step(){
+    if(sync) stepSync(); else stepAsync();
+    gen++; series.push(coop()); if(series.length > 400) series.shift();
+    render();
+  }
+  function hex(c){ // "#rrggbb" or rgb() -> [r,g,b]
+    if(c.charAt(0) === "#") return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];
+    var m = c.match(/\d+/g); return [ +m[0], +m[1], +m[2] ];
+  }
+  function render(){
+    var t = theme(), cC = hex(t.lapis), cD = hex(t.brick), d = img.data;
+    for(var k=0;k<L*L;k++){
+      var c = grid[k] ? cC : cD;
+      d[4*k] = c[0]; d[4*k+1] = c[1]; d[4*k+2] = c[2]; d[4*k+3] = 255;
+    }
+    buf.getContext("2d").putImageData(img, 0, 0);
+    var c2 = fitCanvas(cv);
+    c2.ctx.imageSmoothingEnabled = false;
+    c2.ctx.drawImage(buf, 0, 0, c2.w, c2.h);
+    var f = series[series.length-1];
+    $("lat-readout").textContent = "generation " + gen + " · f_C = " + fmt(f, 3) +
+      " · " + (sync ? "synchronous" : "asynchronous") + ", " + (periodic ? "periodic" : "fixed") + ", b = " + fmt(b);
+    $("lat-now").textContent = fmt(f, 3);
+    cv.setAttribute("aria-label", "Lattice at generation " + gen + ": " + pct(f) + " cooperators.");
+    var py = PAYLOAD.spatial_coop_1p8_2;
+    $("lat-compare").textContent = "Python ran b = 1.8 for 200 generations and settled at " + fmt(py,3) +
+      "; you are at " + fmt(f,3) + " after " + gen + " generations with b = " + fmt(b) + ".";
+    drawSpark();
+  }
+  function drawSpark(){
+    var c = fitCanvas(spark), ctx = c.ctx, t = theme();
+    ctx.strokeStyle = t.line; ctx.beginPath();
+    ctx.moveTo(0, c.h-0.5); ctx.lineTo(c.w, c.h-0.5); ctx.stroke();
+    if(series.length < 2) return;
+    ctx.beginPath();
+    series.forEach(function(v, i){
+      var x = c.w * i/(Math.max(series.length-1, 1)), y = c.h - v*(c.h-4) - 2;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = t.lapis; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillText("f_C over " + series.length + " generations", 4, 11);
+  }
+  var raf = null;
+  function loop(){
+    if(!playing) return;
+    step();
+    raf = requestAnimationFrame(loop);
+  }
+  $("lat-play").addEventListener("click", function(){
+    playing = !playing;
+    this.textContent = playing ? "Pause" : "Play";
+    this.setAttribute("aria-pressed", playing ? "true" : "false");
+    if(playing) loop(); else if(raf) cancelAnimationFrame(raf);
+  });
+  $("lat-step").addEventListener("click", step);
+  $("lat-reset").addEventListener("click", function(){
+    playing = false; $("lat-play").textContent = "Play"; if(raf) cancelAnimationFrame(raf); reset();
+  });
+  $("lat-b").addEventListener("input", function(){ b = parseFloat(this.value); $("lat-b-val").textContent = fmt(b); render(); });
+  $("lat-start").addEventListener("change", reset);
+  $("lat-bnd").addEventListener("change", function(){ periodic = this.value === "periodic"; render(); });
+  $("lat-upd").addEventListener("change", function(){ sync = this.value === "sync"; render(); });
+  $("lat-py").textContent = fmt(PAYLOAD.spatial_coop_1p8_2, 3);
+
+  // phase diagram from Python
+  var ph = PAYLOAD.spatial_phase, pcv = $("lat-phase");
+  function drawPhase(){
+    var c = fitCanvas(pcv), ctx = c.ctx, t = theme(), m = 26;
+    var x = function(bv){ return m + (bv-1)/(1) * (c.w-m-8); };
+    var y = function(f){ return c.h-18 - f*(c.h-30); };
+    ctx.strokeStyle = t.line; ctx.beginPath();
+    ctx.moveTo(m, y(0)); ctx.lineTo(c.w-8, y(0)); ctx.moveTo(m, y(0)); ctx.lineTo(m, y(1)); ctx.stroke();
+    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.fillText("1.0", m-2, c.h-6); ctx.fillText("2.0", c.w-24, c.h-6);
+    ctx.fillText("f_C", 2, 12);
+    ctx.beginPath();
+    ph.forEach(function(d, i){ if(i===0) ctx.moveTo(x(d.b), y(d.coop_mean)); else ctx.lineTo(x(d.b), y(d.coop_mean)); });
+    ctx.strokeStyle = t.lapis; ctx.lineWidth = 2; ctx.stroke();
+    ph.forEach(function(d){
+      ctx.beginPath(); ctx.arc(x(d.b), y(d.coop_mean), 3, 0, 2*Math.PI); ctx.fillStyle = t.lapis; ctx.fill();
+    });
+    ctx.strokeStyle = t.brass; ctx.setLineDash([3,3]); ctx.beginPath();
+    ctx.moveTo(x(b), y(0)); ctx.lineTo(x(b), y(1)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  $("lat-phase-cap").textContent = "Python, " + ph.length + " values of b: " +
+    ph.map(function(d){ return "b=" + fmt(d.b,2) + " → " + fmt(d.coop_mean,3); }).join(" · ") +
+    ". The brass line is your current b.";
+  onRedraw(function(){ drawPhase(); });
+  var origRender = render;
+  render = function(){ origRender(); drawPhase(); };
+  onRedraw(function(){ if(series.length) origRender(); });
+  reset();
+})();
+/* ------------------------------------------------- bench 6: patience */
+(function patienceBench(){
+  var host = $("delta-bars"), chips = $("delta-chips"), rows = [];
+  ["always cooperate", "defect, then D forever", "alternate D, C forever"].forEach(function(lbl){
+    var r = el("div", "bar");
+    var lab = el("div", null, ""), track = el("div", "track"), val = el("div", null, "");
+    lab.textContent = lbl; lab.style.whiteSpace = "nowrap"; lab.style.width = "auto";
+    r.style.gridTemplateColumns = "150px minmax(0,1fr) 52px";
+    var fill = el("div", "fill"); track.appendChild(fill);
+    r.appendChild(lab); r.appendChild(track); r.appendChild(val);
+    host.appendChild(r); rows.push({fill:fill, val:val});
+  });
+  function update(){
+    var d = parseFloat($("delta").value), th = thresholdsOf(pm);
+    $("delta-val").textContent = fmt(d);
+    $("delta-life").textContent = fmt(1/(1-d), 1);
+    var vals = [ pm.R, (1-d)*pm.T + d*pm.P, (pm.T + d*pm.S)/(1+d) ];
+    var mx = Math.max(pm.T, Math.max.apply(null, vals));
+    var cols = [css("--lapis"), css("--brick"), css("--brass")];
+    rows.forEach(function(r, i){
+      r.fill.style.width = clamp(100*vals[i]/mx, 0, 100) + "%";
+      r.fill.style.background = cols[i];
+      r.val.textContent = fmt(vals[i]);
+    });
+    chips.textContent = "";
+    function chip(label, holds, note){
+      var c = el("span", "chip " + (holds ? "ok" : "no"), label + " · " + (holds ? "holds" : "fails") + " · " + note);
+      chips.appendChild(c);
+    }
+    chip("Grim SPE", d >= th.grim, "δ ≥ " + fmt(th.grim,3));
+    chip("TFT Nash", d >= th.nash, "δ ≥ " + fmt(th.nash,3));
+    var spePossible = (th.alt >= 0 && th.alt < 1 && th.alt >= th.grim && th.alt <= th.dd);
+    chip("TFT subgame-perfect", spePossible && Math.abs(d - th.alt) < 1e-9,
+      "needs δ = " + fmt(th.alt,3) + " exactly and " + fmt(th.alt,3) + " ≤ " + fmt(th.dd,3));
+    $("delta-explain").textContent = "A deviator against TFT need not defect forever: it can alternate " +
+      "D, C, D, C and collect (T + δS)/(1 + δ) = " + fmt(vals[2]) + " per round against TFT's " +
+      fmt(pm.R) + ". That is why TFT's Nash threshold is (T−R)/(R−S) = " + fmt(th.alt,3) +
+      ", above Grim's " + fmt(th.grim,3) + ".";
+  }
+  $("delta").addEventListener("input", update);
+  onPm(update);
+  redraws.push(update);
+  update();
+})();
+/* --------------------------------------- bench 7: noise & extortion */
+(function noiseBench(){
+  var NS = PAYLOAD.noise_selfplay, eps = NS.eps, names = Object.keys(NS.strategies);
+  var cv = $("noise-chart"), tip = $("noise-tip");
+  function palette(){
+    var t = theme();
+    return [t.lapis, t.brick, t.brass, t.ink, t.muted,
+            mix(t.lapis, t.brass, 0.5), mix(t.brick, t.brass, 0.5), mix(t.lapis, t.ink, 0.55)];
+  }
+  var xmin = Math.min.apply(null, eps), xmax = Math.max.apply(null, eps);
+  var ymin = Infinity, ymax = -Infinity;
+  names.forEach(function(n){ NS.strategies[n].exact.forEach(function(v){
+    if(v < ymin) ymin = v; if(v > ymax) ymax = v; }); });
+  var m = { l:40, r:10, t:12, b:30 };
+  var X = function(v, w){ return m.l + (v-xmin)/(xmax-xmin || 1) * (w-m.l-m.r); };
+  var Y = function(v, h){ return h-m.b - (v-ymin)/(ymax-ymin || 1) * (h-m.t-m.b); };
+  function drawNoise(){
+    var c = fitCanvas(cv), ctx = c.ctx, t = theme(), cols = palette();
+    ctx.strokeStyle = t.line; ctx.beginPath();
+    ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, c.h-m.b); ctx.lineTo(c.w-m.r, c.h-m.b); ctx.stroke();
+    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "right";
+    [ymin, (ymin+ymax)/2, ymax].forEach(function(v){ ctx.fillText(fmt(v,2), m.l-4, Y(v,c.h)+3); });
+    ctx.textAlign = "center";
+    eps.forEach(function(v){ ctx.fillText(fmt(v,3), X(v,c.w), c.h-m.b+13); });
+    ctx.fillText("ε", (m.l + c.w-m.r)/2, c.h-4);
+    names.forEach(function(n, i){
+      var d = NS.strategies[n].exact;
+      ctx.beginPath();
+      d.forEach(function(v, k){ var x = X(eps[k], c.w), y = Y(v, c.h);
+        if(k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+      ctx.strokeStyle = cols[i % cols.length]; ctx.lineWidth = 2; ctx.stroke();
+      d.forEach(function(v, k){ ctx.beginPath();
+        ctx.arc(X(eps[k],c.w), Y(v,c.h), 2.5, 0, 2*Math.PI);
+        ctx.fillStyle = cols[i % cols.length]; ctx.fill(); });
+    });
+  }
+  function legend(){
+    var cols = palette(), host = $("noise-legend"); host.textContent = "";
+    names.forEach(function(n, i){
+      var s = el("span", null, n + "  ");
+      s.style.color = cols[i % cols.length]; s.style.marginRight = "10px";
+      host.appendChild(s);
+    });
+  }
+  function pretty(f){ return f.replace(/varepsilon/g, "ε").replace(/\*/g, "").replace(/-/g, "−"); }
+  (function forms(){
+    var host = $("noise-forms"); host.textContent = "";
+    names.forEach(function(n){
+      var d = NS.strategies[n];
+      host.appendChild(el("div", null, n + ": " + pretty(d.series_axelrod) +
+        (d.series_axelrod.indexOf("varepsilon") >= 0 ? " + O(ε²)" : " for any ε > 0")));
+    });
+  })();
+  cv.addEventListener("mousemove", function(ev){
+    var q = canvasPos(cv, ev), x = q.x, y = q.y, w = q.w, h = q.h, best = null, bd = 1e9;
+    names.forEach(function(n){
+      NS.strategies[n].exact.forEach(function(v, k){
+        var dx = X(eps[k], w)-x, dy = Y(v, h)-y, dd = dx*dx+dy*dy;
+        if(dd < bd){ bd = dd; best = n + " at ε = " + fmt(eps[k],3) + ": " + fmt(v,3); }
+      });
+    });
+    if(bd < 400) tipAt(tip, cv.parentNode, q.sx, q.sy, best); else tip.style.opacity = "0";
+  });
+  cv.addEventListener("mouseleave", function(){ tip.style.opacity = "0"; });
+  onRedraw(function(){ drawNoise(); legend(); });
+
+  /* --- ZD scatter --- */
+  var zcv = $("zd-chart"), ztip = $("zd-tip"), pts = PAYLOAD.zd.scatter;
+  var sxs = pts.map(function(p){ return p.s_X; }), sys = pts.map(function(p){ return p.s_Y; });
+  var lo = Math.min(Math.min.apply(null, sxs), Math.min.apply(null, sys)) - 0.2;
+  var hi = Math.max(Math.max.apply(null, sxs), Math.max.apply(null, sys)) + 0.2;
+  var zm = { l:40, r:12, t:12, b:32 };
+  function ZX(v, w){ return zm.l + (v-lo)/(hi-lo) * (w-zm.l-zm.r); }
+  function ZY(v, h){ return h-zm.b - (v-lo)/(hi-lo) * (h-zm.t-zm.b); }
+  function drawZD(){
+    var c = fitCanvas(zcv), ctx = c.ctx, t = theme();
+    ctx.strokeStyle = t.line; ctx.beginPath();
+    ctx.moveTo(zm.l, zm.t); ctx.lineTo(zm.l, c.h-zm.b); ctx.lineTo(c.w-zm.r, c.h-zm.b); ctx.stroke();
+    ctx.fillStyle = t.muted; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "right"; ctx.fillText(fmt(hi,1), zm.l-4, ZY(hi,c.h)+8);
+    ctx.fillText(fmt(lo,1), zm.l-4, ZY(lo,c.h));
+    ctx.textAlign = "center"; ctx.fillText("opponent s_Y", (zm.l+c.w-zm.r)/2, c.h-6);
+    ctx.save(); ctx.translate(11, (zm.t + c.h-zm.b)/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText("Extort-2 s_X", 0, 0); ctx.restore();
+    // extortion line: s_X - P = 2 (s_Y - P)
+    var P = PAYLOAD.payoffs.P;
+    ctx.beginPath();
+    ctx.moveTo(ZX(lo, c.w), ZY(P + 2*(lo-P), c.h));
+    ctx.lineTo(ZX(hi, c.w), ZY(P + 2*(hi-P), c.h));
+    ctx.strokeStyle = t.brass; ctx.lineWidth = 1.5; ctx.stroke();
+    pts.forEach(function(p){
+      var named = p.opponent !== "random";
+      ctx.beginPath(); ctx.arc(ZX(p.s_Y,c.w), ZY(p.s_X,c.h), named ? 4 : 2.2, 0, 2*Math.PI);
+      ctx.fillStyle = named ? t.lapis : t.muted; ctx.fill();
+      if(named){ ctx.fillStyle = t.ink; ctx.textAlign = "left";
+        ctx.fillText(p.opponent, ZX(p.s_Y,c.w)+6, ZY(p.s_X,c.h)-4); }
+    });
+  }
+  zcv.addEventListener("mousemove", function(ev){
+    var q = canvasPos(zcv, ev), x = q.x, y = q.y, w = q.w, h = q.h, best = null, bd = 1e9;
+    pts.forEach(function(p){
+      var dx = ZX(p.s_Y,w)-x, dy = ZY(p.s_X,h)-y, dd = dx*dx+dy*dy;
+      if(dd < bd){ bd = dd; best = p; }
+    });
+    if(best && bd < 300)
+      tipAt(ztip, zcv.parentNode, q.sx, q.sy, best.opponent + ": s_X = " + fmt(best.s_X,3) + ", s_Y = " + fmt(best.s_Y,3));
+    else ztip.style.opacity = "0";
+  });
+  zcv.addEventListener("mouseleave", function(){ ztip.style.opacity = "0"; });
+  onRedraw(drawZD);
+
+  /* --- tables and strip --- */
+  var tb = $("zd-learner").querySelector("tbody");
+  PAYLOAD.zd.learner_final.forEach(function(r){
+    var tr = el("tr");
+    tr.appendChild(el("td", null, r.opponent));
+    tr.appendChild(el("td", null, fmt(r.final_learner,3)));
+    tr.appendChild(el("td", null, fmt(r.final_opponent,3)));
+    tr.appendChild(el("td", null, r.final_policy.map(function(v){ return fmt(v,1); }).join(" ")));
+    tb.appendChild(tr);
+  });
+  var evo = PAYLOAD.zd.evolution_final, tb2 = $("zd-evo").querySelector("tbody");
+  Object.keys(evo).sort(function(a,c){ return evo[c]-evo[a]; }).forEach(function(k){
+    var tr = el("tr");
+    tr.appendChild(el("td", null, k));
+    tr.appendChild(el("td", null, evo[k] >= 1e-3 ? fmt(evo[k],4) : evo[k].toExponential(1)));
+    tb2.appendChild(tr);
+  });
+  var strip = $("evo-strip");
+  PAYLOAD.evolution_noise.forEach(function(d){
+    strip.appendChild(el("div", null, "ε " + fmt(d.eps,3) + " → " + d.dominant));
+  });
+  $("moran-dom").textContent = PAYLOAD.zd.moran_dominant;
+})();
+/* ----------------------------------------------------------- scrollspy */
+(function(){
+  var links = document.querySelectorAll(".rail a");
+  if(!window.IntersectionObserver) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      for(var i=0;i<links.length;i++)
+        links[i].setAttribute("aria-current",
+          links[i].getAttribute("href") === "#" + e.target.id ? "true" : "false");
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  var secs = document.querySelectorAll("section.bench");
+  for(var i=0;i<secs.length;i++) io.observe(secs[i]);
+})();
+})();
+</script>
+</body>
+</html>

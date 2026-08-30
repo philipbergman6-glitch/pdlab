@@ -9,15 +9,16 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from pdlab.analytic import (
+    STRATS3,
     P,
     R,
     S,
-    STRATS3,
     T,
     best_responses,
     cooperation_value,
     delta,
     deviation_values,
+    eps,
     grim_threshold_symbolic,
     is_ess,
     is_neutrally_stable,
@@ -28,6 +29,8 @@ from pdlab.analytic import (
     payoff_matrix_3_symbolic,
     replicator_fixed_points_symbolic,
     replicator_rhs,
+    self_play_noise_symbolic,
+    stationary_payoffs_symbolic,
     tft_alld_threshold_symbolic,
     tft_alt_threshold_symbolic,
     tft_invasion_threshold,
@@ -153,7 +156,7 @@ def test_cooperation_and_deviation_values():
 # --------------------------------------------------------------------------
 def test_payoff_matrix_3_numbers_at_delta_0_9():
     A = payoff_matrix_3(PM, 0.9)
-    assert A == pytest.approx(np.array([[3, 0, 3], [5, 1, 1.4], [3, 0.9, 3]]))
+    assert pytest.approx(np.array([[3, 0, 3], [5, 1, 1.4], [3, 0.9, 3]])) == A
     assert STRATS3 == ("ALLC", "ALLD", "TFT")
 
 
@@ -262,3 +265,26 @@ def test_ess_classification_of_the_three_strategies():
 def test_ess_of_a_dominant_pure_strategy():
     A = np.array([[2.0, 0.0], [3.0, 1.0]])
     assert is_ess(A, 1) and not is_ess(A, 0)
+
+
+# --------------------------------------------------------------------------
+# symbolic noise analysis
+# --------------------------------------------------------------------------
+def test_tft_self_play_under_noise_is_the_average_of_all_four_payoffs():
+    sx, sy = stationary_payoffs_symbolic((1, 0, 1, 0), (1, 0, 1, 0))
+    assert sp.simplify(sx - (T + R + P + S) / 4) == 0
+    assert sp.simplify(sx - sy) == 0
+    assert float(sx.subs(SUB)) == pytest.approx(2.25)
+
+
+def test_wsls_self_play_under_noise_tends_to_r():
+    w = self_play_noise_symbolic((1, 0, 0, 1))
+    assert sp.limit(w, eps, 0) == R
+    assert float(w.subs({**SUB, eps: sp.Rational(1, 100)})) == pytest.approx(2.9510919999, abs=1e-9)
+
+
+def test_stationary_payoffs_symbolic_validates_lengths():
+    with pytest.raises(ValueError, match="four entries"):
+        stationary_payoffs_symbolic((1, 0, 1), (1, 0, 1, 0))
+    with pytest.raises(ValueError, match="four entries"):
+        stationary_payoffs_symbolic((1, 0, 1, 0), (1, 0, 1, 0, 0))

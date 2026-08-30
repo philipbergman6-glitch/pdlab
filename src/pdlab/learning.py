@@ -54,9 +54,7 @@ class QLearner(Strategy):
     def _decide(self, rng: np.random.Generator) -> Move:
         self._rng_cache = rng
         q = self.Q[self.state]
-        if rng.random() < self.explore:
-            a = int(rng.integers(0, 2))
-        elif q[0] == q[1]:
+        if rng.random() < self.explore or q[0] == q[1]:
             a = int(rng.integers(0, 2))
         else:
             a = int(np.argmax(q))

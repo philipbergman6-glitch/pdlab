@@ -15,6 +15,7 @@ Also implements the zero-determinant (ZD) algebra of Press & Dyson (2012):
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -22,9 +23,11 @@ from numpy.typing import NDArray
 from pdlab.game import PayoffMatrix
 
 Vec4 = NDArray[np.float64]
+Vector = Sequence[float] | NDArray[np.floating[Any]]
+"""Anything convertible to a length-4 float array."""
 
 
-def _vec(p: Sequence[float], name: str = "p") -> Vec4:
+def _vec(p: Vector, name: str = "p") -> Vec4:
     arr = np.asarray(p, dtype=float)
     if arr.shape != (4,):
         raise ValueError(f"{name} must have shape (4,), got {arr.shape}")
@@ -39,20 +42,20 @@ def _check_eps(eps: float) -> float:
     return float(eps)
 
 
-def noisy(p: Sequence[float], eps: float) -> Vec4:
+def noisy(p: Vector, eps: float) -> Vec4:
     """Effective cooperation probabilities after implementation error ``eps``."""
     arr = _vec(p)
     e = _check_eps(eps)
     return (1 - 2 * e) * arr + e
 
 
-def swap_perspective(q: Sequence[float]) -> Vec4:
+def swap_perspective(q: Vector) -> Vec4:
     """Express Y's memory-one vector in X's state order (CD <-> DC)."""
     arr = _vec(q, "q")
-    return arr[[0, 2, 1, 3]]
+    return np.asarray(arr[[0, 2, 1, 3]], dtype=float)
 
 
-def transition_matrix(p: Sequence[float], q: Sequence[float], eps: float = 0.0) -> Vec4:
+def transition_matrix(p: Vector, q: Vector, eps: float = 0.0) -> Vec4:
     """Row-stochastic 4x4 transition matrix over (CC, CD, DC, DD)."""
     px = noisy(p, eps)
     qy = noisy(swap_perspective(q), eps)
@@ -95,15 +98,15 @@ def stationary_distribution(M: NDArray[np.float64], tol: float = 1e-10) -> Vec4:
     b = np.zeros(5)
     b[-1] = 1.0
     v, *_ = np.linalg.lstsq(Aug, b, rcond=None)
-    v = np.clip(v, 0.0, None)
+    v = np.asarray(np.clip(v, 0.0, None), dtype=float)
     v /= v.sum()
     if not np.allclose(v @ M, v, atol=tol):
         raise ValueError("failed to converge to a stationary distribution")
-    return v
+    return np.asarray(v, dtype=float)
 
 
 def stationary_payoffs(
-    p: Sequence[float], q: Sequence[float], pm: PayoffMatrix, eps: float = 0.0
+    p: Vector, q: Vector, pm: PayoffMatrix, eps: float = 0.0
 ) -> tuple[float, float]:
     """Long-run per-round payoffs (s_X, s_Y) for memory-one X vs Y."""
     v = stationary_distribution(transition_matrix(p, q, eps))
@@ -123,8 +126,8 @@ def initial_distribution(p0: float, q0: float, eps: float = 0.0) -> Vec4:
 
 
 def expected_payoffs(
-    p: Sequence[float],
-    q: Sequence[float],
+    p: Vector,
+    q: Vector,
     p0: float,
     q0: float,
     pm: PayoffMatrix,
@@ -146,8 +149,8 @@ def expected_payoffs(
 
 
 def discounted_payoffs(
-    p: Sequence[float],
-    q: Sequence[float],
+    p: Vector,
+    q: Vector,
     p0: float,
     q0: float,
     pm: PayoffMatrix,
@@ -171,9 +174,7 @@ def discounted_payoffs(
 # --------------------------------------------------------------------------
 # Press & Dyson determinant formalism
 # --------------------------------------------------------------------------
-def press_dyson_determinant(
-    p: Sequence[float], q: Sequence[float], f: Sequence[float]
-) -> float:
+def press_dyson_determinant(p: Vector, q: Vector, f: Vector) -> float:
     """D(p, q, f) of Press & Dyson (2012), eq. (4)."""
     px = _vec(p)
     qy = swap_perspective(q)
@@ -186,9 +187,7 @@ def press_dyson_determinant(
     return float(np.linalg.det(np.column_stack([col1, col2, col3, fv])))
 
 
-def press_dyson_payoffs(
-    p: Sequence[float], q: Sequence[float], pm: PayoffMatrix
-) -> tuple[float, float]:
+def press_dyson_payoffs(p: Vector, q: Vector, pm: PayoffMatrix) -> tuple[float, float]:
     """Stationary payoffs via the determinant formula s = D(p,q,S)/D(p,q,1)."""
     sx, sy = payoff_vectors(pm)
     den = press_dyson_determinant(p, q, np.ones(4))
@@ -210,7 +209,7 @@ def zd_vector(pm: PayoffMatrix, alpha: float, beta: float, gamma: float) -> Vec4
     p = p_tilde + np.array([1.0, 1.0, 0.0, 0.0])
     if np.any(p < -1e-12) or np.any(p > 1 + 1e-12):
         raise ValueError(f"infeasible ZD strategy: p={p}")
-    return np.clip(p, 0.0, 1.0)
+    return np.asarray(np.clip(p, 0.0, 1.0), dtype=float)
 
 
 def _max_phi(pm: PayoffMatrix, chi: float, baseline: float) -> float:

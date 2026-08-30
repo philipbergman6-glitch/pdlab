@@ -11,9 +11,9 @@ import pytest
 
 matplotlib.use("Agg")
 
-from pdlab.experiments import Scale, run_all  # noqa: E402
-from pdlab.game import PayoffMatrix  # noqa: E402
-from pdlab.reproduce import load_canonical, reproduce  # noqa: E402
+from pdlab.experiments import Scale, run_all
+from pdlab.game import PayoffMatrix
+from pdlab.reproduce import load_canonical, reproduce
 
 PM = PayoffMatrix.axelrod()
 
@@ -115,7 +115,8 @@ def test_cli_thresholds_with_custom_payoffs():
 
     res = _runner().invoke(app, ["thresholds", "--T", "4", "--R", "3", "--P", "1", "--S", "0"])
     assert res.exit_code == 0
-    assert "TFT can be SPE: True" in res.stdout
+    # T-R = P-S = 1 makes all three thresholds coincide at 1/3
+    assert res.stdout.count("0.3333") == 5
 
 
 def test_cli_play_command():
@@ -179,3 +180,35 @@ def test_replicator_block_reports_alld_as_ess():
     assert rep["x_star"] == pytest.approx(1 / 17)
     assert rep["ess"]["ALLD"] is True
     assert rep["ess"]["ALLC"] is False
+
+
+def test_simulate_discounted_total_validates_delta():
+    from pdlab.experiments import simulate_discounted_total
+    from pdlab.strategies import REGISTRY
+
+    with pytest.raises(ValueError, match=r"delta in \[0,1\)"):
+        simulate_discounted_total(
+            REGISTRY.make("TFT"),
+            REGISTRY.make("ALLD"),
+            1.0,
+            10,
+            PM,
+            np.random.default_rng(0),
+        )
+
+
+def test_simulate_discounted_total_matches_the_closed_form_for_alld_vs_tft():
+    from pdlab.experiments import simulate_discounted_total
+    from pdlab.strategies import REGISTRY
+
+    d = 0.9
+    mean, se = simulate_discounted_total(
+        REGISTRY.make("ALLD"),
+        REGISTRY.make("TFT"),
+        d,
+        4000,
+        PM,
+        np.random.default_rng(0),
+    )
+    exact = ((1 - d) * PM.T + d * PM.P) / (1 - d)  # normalised value / (1 - delta)
+    assert mean == pytest.approx(exact, abs=4 * se)

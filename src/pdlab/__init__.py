@@ -6,9 +6,9 @@ from pdlab.strategies import REGISTRY, Strategy
 from pdlab.tournament import TournamentResult, round_robin
 
 __all__ = [
+    "REGISTRY",
     "C",
     "D",
-    "REGISTRY",
     "MatchResult",
     "Move",
     "PayoffMatrix",
