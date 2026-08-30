@@ -116,8 +116,7 @@ Three features deserve comment.
    field; Axelrod [-@axelrod1984, ch. 2]).
 2. **Generous strategies gain as noise rises.** GTFT and ZDGTFT-2 overtake
    the stricter reciprocators once $\varepsilon>0$, while Grim collapses:
-   a single accidental defection triggers permanent punishment. Figure
-   @fig:ranks shows the full rank changes.
+   a single accidental defection triggers permanent punishment. @fig:ranks shows the full rank changes.
 3. **Extortion loses tournaments.** Extort-2 is last without noise and never
    better than {{stat:extort2_best_rank|ordinal}} of {{stat:n_strategies}} at any noise level (only ALLD and,
    under heavy noise, ALLC keep it company at the bottom). It can only "win"
