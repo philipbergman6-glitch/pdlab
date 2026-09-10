@@ -89,6 +89,11 @@ def _app_payload(res: dict[str, Any]) -> dict[str, Any]:
         },
         "spatial_phase": res["spatial"]["phase"],
         "spatial_coop_1p8_2": res["spatial"]["coop_1p8_2"],
+        "spatial_sync_async": {
+            "L": res["spatial"]["sync_vs_async"]["L"],
+            "sync_final": res["spatial"]["sync_vs_async"]["sync"][-1],
+            "async_final": res["spatial"]["sync_vs_async"]["async"][-1],
+        },
         "moran_fixation": res["moran_fixation"]["rows"],
         "moran_mutation": [
             {k: v for k, v in r.items() if k != "mean_freq"} for r in res["moran_mutation"]["rows"]

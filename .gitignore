@@ -14,3 +14,4 @@ report/build/*
 *.egg-info/
 dist/
 .DS_Store
+node_modules/

@@ -729,6 +729,25 @@ details summary:hover { color: var(--sc-ink); }
 .cli-line input { border: 0; background: transparent; padding: .3em 0; width: 100%; font-size: var(--sc-t-base); }
 .cli-line input:focus { outline: 0; }
 .hints { display: flex; flex-wrap: wrap; gap: var(--sc-2); margin-top: var(--sc-3); }
+.frame { font-size: var(--sc-t-sm); color: var(--sc-ink-soft); border-left: 2px solid var(--pd-coop); padding: .2em 0 .2em var(--sc-4); margin-bottom: var(--sc-6); max-width: 52rem; }
+.frame b { color: var(--sc-ink); font-weight: 500; }
+.frame a { color: var(--sc-ink); }
+.derive { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); margin-top: var(--sc-3); display: grid; gap: .35em; }
+.derive .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sc-3); align-items: baseline; border-top: 1px solid var(--sc-hairline); padding-top: .3em; }
+.derive .row:first-child { border-top: 0; padding-top: 0; }
+.derive .ok { color: var(--pd-coop-ink); } .derive .no { color: var(--pd-defect-ink); }
+.derive .lhs { color: var(--sc-ink-soft); } .derive .lhs b { color: var(--sc-ink); font-weight: 500; }
+table.mchain { border-collapse: collapse; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); font-variant-numeric: tabular-nums; }
+table.mchain th, table.mchain td { padding: .15em .45em; text-align: right; border-bottom: 1px solid var(--sc-hairline); font-weight: 400; }
+table.mchain th { color: var(--sc-ink-soft); }
+table.mchain tr.sum td { border-top: 1px solid var(--sc-hairline-strong); border-bottom: 0; }
+table.mchain tr.sum.ok td { color: var(--pd-coop-ink); } table.mchain tr.sum.no td { color: var(--pd-defect-ink); }
+@media (max-width: 640px) {
+  #bench-noise .cuebox { min-height: 7em !important; }
+  #bench-horizon .cuebox { min-height: 7.5em; }
+  #bench-horizon #delta-bars { display: none; }
+  #bench-horizon .anchor-lead { max-height: calc(100vh - 4.5rem); overflow-y: auto; }
+}
 .colophon { margin-top: var(--sc-7); padding-top: var(--sc-4); border-top: 1px solid var(--sc-hairline);
   display: flex; flex-wrap: wrap; gap: var(--sc-4) var(--sc-6); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); }
 
@@ -779,6 +798,9 @@ details summary:hover { color: var(--sc-ink); }
 
 <!-- 1 · CURIOSITY: the surface, already in a state -->
 <section id="bench-payoffs" class="act act--flow" data-sc-act="flow">
+  <div class="wrap" data-sc-in>
+    <p class="frame"><b>What this page is.</b> The interactive companion to a game-theory final project on the Prisoner's Dilemma: one game taken through rationality, selection, noise and learning. Everything here is computed in the page or taken from the canonical run of the <code>pdlab</code> Python package. The full derivations and proofs are in the <a href="../report/build/prisoners_dilemma_report.pdf">report (PDF, 49 pages)</a>; the code, tests and reviews are in the <a href="https://github.com/philipbergman6-glitch/pdlab">repository</a>. Scroll to operate it; the lattice behind the panels is a real simulation and scrolling is its clock.</p>
+  </div>
   <div class="wrap hero" data-sc-in data-sc-stagger="70">
     <div class="panel">
       <p class="label">Payoffs · <b>one-shot game</b></p>
@@ -846,6 +868,7 @@ details summary:hover { color: var(--sc-ink); }
         </div>
         <div class="bars" id="delta-bars" style="margin-top:var(--sc-2)"></div>
         <div class="chips" id="delta-chips" style="margin-top:var(--sc-3)"></div>
+        <div class="derive" id="derive" aria-live="off"></div>
       </div>
     </div>
   </div>
@@ -927,6 +950,7 @@ details summary:hover { color: var(--sc-ink); }
       <div class="big"><span id="lat-gen">0</span><small>generation</small></div>
       <div class="stat"><span>fraction cooperating f<sub>C</sub></span><span class="num" id="lat-now">1.000</span></div>
       <div class="stat"><span>Python, b ∈ (1.8, 2), 200 generations</span><span class="num" id="lat-py"></span></div>
+      <div class="stat"><span>Python, same b, asynchronous (L = <span id="lat-async-L"></span>)</span><span class="num" id="lat-py-async"></span></div>
       <canvas class="chart sparkbox" id="lat-spark" width="360" height="44" aria-hidden="true"></canvas>
       <div>
         <label for="lat-b" class="label">temptation b = <b id="lat-b-val">1.90</b></label>
@@ -935,13 +959,15 @@ details summary:hover { color: var(--sc-ink); }
       <div class="ctl-row">
         <div><label for="lat-start">start</label>
           <select id="lat-start"><option value="single">one defector</option><option value="random">10 % defectors</option></select></div>
+        <div><label for="lat-update">updating</label>
+          <select id="lat-update"><option value="sync">synchronous</option><option value="async">asynchronous</option></select></div>
         <button class="ctl" id="lat-step" type="button">Step</button>
         <button class="ctl" id="lat-reset" type="button">Rewind</button>
       </div>
       <canvas class="chart" id="lat-phase" width="360" height="90" role="img" aria-label="Asymptotic cooperation against b, from Python"></canvas>
       <p class="soft" id="lat-phase-cap" style="font-size:var(--sc-t-xs)"></p>
     </div>
-    <div class="caption" data-sc-cue="0 0.48 0">Each cell plays the weak dilemma (R = 1, T = b, P = S = 0) with its eight neighbours and itself, then copies its best-scoring neighbour. Ties keep the incumbent. Synchronous, periodic. Scroll to advance the generation.</div>
+    <div class="caption" data-sc-cue="0 0.48 0"><span id="lat-rule">Each cell plays the weak dilemma (R = 1, T = b, P = S = 0) with its eight neighbours and itself, then copies its best-scoring neighbour. Ties keep the incumbent. Synchronous, periodic. Scroll to advance the generation.</span></div>
     <div class="caption" data-sc-cue="0.5 1 0.15 0"><span id="lat-caption"></span></div>
   </div>
 </section>
@@ -959,6 +985,11 @@ details summary:hover { color: var(--sc-ink); }
           <h2>Why Tit-for-Tat survives, and when.</h2>
           <p class="sc-body" style="font-size:var(--sc-t-sm)">ALLC, ALLD and TFT in the repeated game with δ = <span class="num" id="sim-delta"></span>. Drag the start point. The dashed edge is a line of neutral fixed points; the dot on the ALLD edge is the invasion threshold.</p>
           <div class="big"><span class="sc-nums" data-sc-count="0 5.88" data-sc-count-at="0.15 0.45">0.00</span><small>% TFT is enough to tip a defector world, x* = 1/17</small></div>
+          <div class="ctl-row" style="margin-top:var(--sc-2)">
+            <div style="flex:1 1 12rem"><label for="sim-mu">mutation rate μ = <span class="num" id="sim-mu-val">0.000</span> (offspring switch to a random other strategy)</label>
+              <input id="sim-mu" type="range" min="0" max="0.2" step="0.005" value="0"></div>
+          </div>
+          <div class="stat"><span>cooperation survives from</span><span class="num" id="sim-basin"></span></div>
           <div class="stat"><span>start</span><span class="num" id="sim-start"></span></div>
           <div class="stat"><span>at t = 80</span><span class="num" id="sim-end"></span></div>
           <div class="stat"><span>verdict</span><span class="num" id="sim-verdict"></span></div>
@@ -1003,6 +1034,11 @@ details summary:hover { color: var(--sc-ink); }
         <div class="stack">
           <p class="label">Live at this ε · <b>self-play</b></p>
           <div id="noise-live"></div>
+          <div class="stack stack--tight" style="margin-top:var(--sc-3)">
+            <div class="ctl-row"><div><label for="chain-strat">the 4 × 4 chain, self-play of</label><select id="chain-strat"></select></div></div>
+            <table class="mchain" id="chain-table" aria-label="Noisy transition matrix with column sums"><thead></thead><tbody></tbody></table>
+            <p class="soft" id="chain-note" style="font-size:var(--sc-t-xs);min-height:2.6em"></p>
+          </div>
           <div data-sc-cue="0.55 1 0.15 0" class="stack stack--tight">
             <p class="label" style="margin-top:var(--sc-3)">Who profits · <b>zero-determinant</b></p>
             <p style="font-size:var(--sc-t-sm)">Extort-2 pins every opponent to s<sub>X</sub> − P = 2 (s<sub>Y</sub> − P) without noise. A Q-learner facing it ends near <span class="num" id="zd-learn"></span> per round while the extortioner takes <span class="num" id="zd-take"></span>. Noise on the extortioner breaks the pin.</p>
@@ -1030,7 +1066,7 @@ details summary:hover { color: var(--sc-ink); }
       <div class="colophon">
         <span>numbers: results/canonical.json · run 5</span>
         <a href="../report/build/prisoners_dilemma_report.pdf">report (PDF)</a>
-        <a href="../README.md">repository README</a>
+        <a href="https://github.com/philipbergman6-glitch/pdlab">repository</a>
         <span>pdlab · Python 3.11 · this page is one file</span>
       </div>
     </div>
@@ -2446,7 +2482,7 @@ function stationaryPayoff(p, q, eps, m){
 }
 /* --------------------------------------------------------- the lattice */
 var LAT = (function(){
-  var L = 99, GENS = 130, b = 1.9, mode = "single";
+  var L = 99, GENS = 130, b = 1.9, mode = "single", update = "sync";
   var frames = [], fc = [], off = [], di, dj;
   for(di = -1; di <= 1; di++) for(dj = -1; dj <= 1; dj++) if(!(di === 0 && dj === 0)) off.push([di, dj]);
   var sc = new Float64Array(L*L);
@@ -2466,6 +2502,25 @@ var LAT = (function(){
     }
     return next;
   }
+  /* asynchronous (Huberman–Glance) updating: L*L random single-site updates per generation, scores recomputed from the current grid */
+  var arng = mulberry32(11);
+  function siteScore(grid, i, j){
+    var n = grid[idx(i,j)] ? 1 : 0, k, ii, jj;
+    for(k = 0; k < 8; k++){ ii = (i + off[k][0] + L) % L; jj = (j + off[k][1] + L) % L; if(grid[idx(ii,jj)]) n++; }
+    return grid[idx(i,j)] ? n : b*n;
+  }
+  function stepAsync(grid){
+    var g = new Uint8Array(grid), t, k, ii, jj;
+    for(t = 0; t < L*L; t++){
+      var i = Math.floor(arng()*L), j = Math.floor(arng()*L);
+      var best = siteScore(g, i, j), strat = g[idx(i,j)];
+      for(k = 0; k < 8; k++){ ii = (i + off[k][0] + L) % L; jj = (j + off[k][1] + L) % L;
+        var s = siteScore(g, ii, jj); if(s > best){ best = s; strat = g[idx(ii,jj)]; } }
+      g[idx(i,j)] = strat;
+    }
+    return g;
+  }
+  function advance(g){ return update === "async" ? stepAsync(g) : step(g); }
   function coop(g){ var s = 0; for(var k = 0; k < L*L; k++) s += g[k]; return s/(L*L); }
   function compute(){
     frames = []; fc = [];
@@ -2473,13 +2528,15 @@ var LAT = (function(){
     if(mode === "single"){ g.fill(1); g[idx(L>>1, L>>1)] = 0; }
     else { var rng = mulberry32(7); for(var k = 0; k < L*L; k++) g[k] = rng() < 0.9 ? 1 : 0; }
     frames.push(g); fc.push(coop(g));
-    for(var t = 1; t <= GENS; t++){ g = step(g); frames.push(g); fc.push(coop(g)); }
+    arng = mulberry32(11);
+    for(var t = 1; t <= GENS; t++){ g = advance(g); frames.push(g); fc.push(coop(g)); }
   }
-  function extend(n){ for(var t = 0; t < n; t++){ var g = step(frames[frames.length-1]); frames.push(g); fc.push(coop(g)); } }
+  function extend(n){ for(var t = 0; t < n; t++){ var g = advance(frames[frames.length-1]); frames.push(g); fc.push(coop(g)); } }
   compute();
   return { L: L, GENS: GENS, frames: function(){ return frames; }, fc: function(){ return fc; },
     setB: function(v){ b = v; compute(); }, getB: function(){ return b; },
-    setMode: function(m){ mode = m; compute(); }, extend: extend };
+    setMode: function(m){ mode = m; compute(); }, extend: extend,
+    setUpdate: function(u){ if(u !== "sync" && u !== "async") throw new Error("bad update rule " + u); update = u; compute(); }, getUpdate: function(){ return update; } };
 })();
 (function ground(){
   var cv = $("ground"), ctx = cv.getContext("2d"), L = LAT.L;
@@ -2604,6 +2661,14 @@ var LAT = (function(){
     chip("TFT Nash", d >= th.nash, "δ ≥ " + fmt(th.nash,3));
     var spePossible = (th.alt >= 0 && th.alt < 1 && th.alt >= th.grim && th.alt <= th.dd);
     chip("TFT subgame-perfect", spePossible && Math.abs(d - th.alt) < 1e-9, "needs δ = " + fmt(th.alt,3) + " exactly, and T−R = P−S");
+    /* the derivation, assembled from the live numbers */
+    var dv = $("derive"); dv.textContent = "";
+    function row(lhs, rhs, cls){ var r = el("div", "row"); var a = el("span", "lhs"); a.innerHTML = lhs; var b = el("span", cls || "num"); b.innerHTML = rhs; r.appendChild(a); r.appendChild(b); dv.appendChild(r); }
+    var VC = pm.R/(1-d), VD = pm.T + d*pm.P/(1-d), VA = (pm.T + d*pm.S)/(1-d*d);
+    row("<b>cooperate forever</b> against Grim: R + δR + δ²R + … = R/(1−δ)", fmt(VC));
+    row("<b>defect once</b>, punished forever: T + δP + δ²P + … = T + δP/(1−δ)", fmt(VD));
+    row("cooperation is an equilibrium iff R/(1−δ) ≥ T + δP/(1−δ) ⇔ δ(T−P) ≥ T−R ⇔ <b>δ ≥ (T−R)/(T−P) = " + fmt(th.grim,3) + "</b>", (d >= th.grim ? "holds" : "fails") + " at δ = " + fmt(d), d >= th.grim ? "ok" : "no");
+    row("against <b>TFT</b> the binding deviation alternates D, C, D, C: (T + δS)/(1−δ²) = " + fmt(VA) + " ≥ R/(1−δ) ⇔ <b>δ ≥ (T−R)/(R−S) = " + fmt((pm.T-pm.R)/(pm.R-pm.S),3) + "</b>", (d >= th.nash ? "holds" : "fails"), d >= th.nash ? "ok" : "no");
   }
   $("delta").addEventListener("input", update);
   onPm(update); redraws.push(update); update();
@@ -2777,6 +2842,14 @@ var LAT = (function(){
   onRedraw(function(){ drawPhase(); drawSpark(GROUND.gen()); });
   $("lat-b").addEventListener("input", function(){ LAT.setB(parseFloat(this.value)); $("lat-b-val").textContent = fmt(LAT.getB()); GROUND.invalidate(); drawPhase(); });
   $("lat-start").addEventListener("change", function(){ LAT.setMode(this.value); GROUND.rewind(); GROUND.invalidate(); });
+  var SA = PAYLOAD.spatial_sync_async;
+  $("lat-async-L").textContent = SA.L; $("lat-py-async").textContent = fmt(SA.async_final, 3);
+  $("lat-update").addEventListener("change", function(){
+    LAT.setUpdate(this.value); GROUND.rewind(); GROUND.invalidate();
+    $("lat-rule").textContent = this.value === "async"
+      ? "Same rule, but one random cell updates at a time, its score and its neighbours' recomputed from the current grid; a generation is " + (LAT.L*LAT.L) + " such updates. Huberman and Glance (1993): without the synchronous clock the kaleidoscope dies. Scroll to advance."
+      : "Each cell plays the weak dilemma (R = 1, T = b, P = S = 0) with its eight neighbours and itself, then copies its best-scoring neighbour. Ties keep the incumbent. Synchronous, periodic. Scroll to advance the generation.";
+  });
   $("lat-step").addEventListener("click", function(){ GROUND.bump(1); });
   $("lat-reset").addEventListener("click", function(){ GROUND.rewind(); });
 })();
@@ -2784,7 +2857,9 @@ var LAT = (function(){
 (function simplexBench(){
   var A = PAYLOAD.replicator.A, xstar = PAYLOAD.replicator.x_star, cv = $("simplex");
   var W = 440, H = 400, pad = 34, V0 = [pad, H - pad], V1 = [W - pad, H - pad], V2 = [W/2, pad];
-  var start = [0.30, 0.55, 0.15];
+  var start = [0.30, 0.55, 0.15], mu = 0;
+  /* starts clustered near the ALLD edge, where the μ = 0 basin boundary x* = 1/17 lives, plus a few interior ones */
+  var GRIDSTARTS = []; (function(){ [0.02, 0.04, 0.06, 0.08, 0.12, 0.2, 0.35].forEach(function(c){ [0, 0.1, 0.25, 0.45].forEach(function(a){ if(a + c < 1) GRIDSTARTS.push([a, 1 - a - c, c]); }); }); })();
   function toXY(x){ return [x[0]*V0[0] + x[1]*V1[0] + x[2]*V2[0], x[0]*V0[1] + x[1]*V1[1] + x[2]*V2[1]]; }
   function norm(x){ var s = x[0]+x[1]+x[2]; if(s <= 0) return [1/3, 1/3, 1/3]; return [x[0]/s, x[1]/s, x[2]/s]; }
   function fromXY(px, py){
@@ -2792,8 +2867,11 @@ var LAT = (function(){
     var a = ((V1[1]-V2[1])*(px-V2[0]) + (V2[0]-V1[0])*(py-V2[1]))/d, b = ((V2[1]-V0[1])*(px-V2[0]) + (V0[0]-V2[0])*(py-V2[1]))/d;
     return norm([clamp(a,0,1), clamp(b,0,1), clamp(1-a-b,0,1)]);
   }
+  /* replicator–mutator: dx_i = sum_j x_j f_j Q_ji − x_i φ, with Q_jj = 1−μ and Q_ji = μ/2 for i ≠ j */
   function rhs(x){ var f = [0,0,0], phi = 0, i, j; for(i = 0; i < 3; i++) for(j = 0; j < 3; j++) f[i] += A[i][j]*x[j];
-    for(i = 0; i < 3; i++) phi += x[i]*f[i]; return [x[0]*(f[0]-phi), x[1]*(f[1]-phi), x[2]*(f[2]-phi)]; }
+    for(i = 0; i < 3; i++) phi += x[i]*f[i];
+    var out = [0,0,0]; for(i = 0; i < 3; i++){ var inflow = 0; for(j = 0; j < 3; j++) inflow += x[j]*f[j]*(i === j ? 1 - mu : mu/2); out[i] = inflow - x[i]*phi; }
+    return out; }
   function add(x, k, d){ return [x[0]+k*d[0], x[1]+k*d[1], x[2]+k*d[2]]; }
   function trajectory(x0){
     var dt = 0.05, steps = Math.round(80/dt), x = x0.slice(), pts = [x.slice()];
@@ -2812,6 +2890,13 @@ var LAT = (function(){
     ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle = t.coop; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(V0[0],V0[1]); ctx.lineTo(V2[0],V2[1]); ctx.stroke(); ctx.restore();
     ctx.font = MONO(12); ctx.fillStyle = t.ink; ctx.textAlign = "center";
     ctx.fillText("ALLC", V0[0]+4, V0[1]+16); ctx.fillText("ALLD", V1[0]-4, V1[1]+16); ctx.fillText("TFT", V2[0], V2[1]-8);
+    /* faint trajectories from a grid of starts: the basin of cooperation at this μ */
+    var survive = 0;
+    ctx.save(); ctx.globalAlpha = 0.28; ctx.lineWidth = 1;
+    GRIDSTARTS.forEach(function(x0){ var tr = trajectory(x0), e = tr[tr.length-1], won = e[1] <= 0.5; if(won) survive++;
+      ctx.strokeStyle = won ? t.coop : t.defect; ctx.beginPath(); tr.forEach(function(p, i){ var q = toXY(p); if(i === 0) ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]); }); ctx.stroke(); });
+    ctx.restore();
+    $("sim-basin").textContent = survive + " of " + GRIDSTARTS.length + " faint starts" + (mu > 0 ? " · μ > 0 removes the threshold: one attractor for every start" : " · bistable, threshold x* = 1/17 on the ALLD edge");
     var pts = trajectory(start);
     ctx.beginPath(); pts.forEach(function(p, i){ var q = toXY(p); if(i === 0) ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]); });
     ctx.strokeStyle = t.accent; ctx.lineWidth = 2; ctx.stroke();
@@ -2823,7 +2908,7 @@ var LAT = (function(){
     var endp = pts[pts.length-1];
     $("sim-start").textContent = "ALLC " + fmt(start[0]) + " · ALLD " + fmt(start[1]) + " · TFT " + fmt(start[2]);
     $("sim-end").textContent = "ALLC " + fmt(endp[0]) + " · ALLD " + fmt(endp[1]) + " · TFT " + fmt(endp[2]);
-    $("sim-verdict").textContent = endp[1] > 0.5 ? "ALLD wins" : "cooperation survives";
+    $("sim-verdict").textContent = mu > 0 ? (endp[1] > 0.5 ? "defectors are the majority" : "conditional cooperators hold the majority") + " at μ = " + fmt(mu, 3) : (endp[1] > 0.5 ? "ALLD wins" : "cooperation survives");
     cv.setAttribute("aria-label", "Replicator simplex. Start ALLC " + fmt(start[0]) + ", ALLD " + fmt(start[1]) + ", TFT " + fmt(start[2]) + "; at t = 80 the population is ALLD " + fmt(endp[1]) + ".");
   }
   $("sim-eig-alld").textContent = eigTxt("ALLD"); $("sim-eig-tft").textContent = eigTxt("TFT");
@@ -2842,6 +2927,7 @@ var LAT = (function(){
     else if(k === "ArrowUp"){ s[2] += d; s[1] -= d/2; s[0] -= d/2; } else if(k === "ArrowDown"){ s[2] -= d; s[1] += d/2; s[0] += d/2; } else return;
     ev.preventDefault(); start = norm([clamp(s[0],0,1), clamp(s[1],0,1), clamp(s[2],0,1)]); draw();
   });
+  $("sim-mu").addEventListener("input", function(){ mu = parseFloat(this.value); $("sim-mu-val").textContent = fmt(mu, 3); draw(); });
   $("sim-alld").addEventListener("click", function(){ start = [0.02, 0.96, 0.02]; draw(); });
   $("sim-star").addEventListener("click", function(){ start = [0.0, 1-(xstar+0.02), xstar+0.02]; draw(); });
   $("sim-mix").addEventListener("click", function(){ start = [1/3, 1/3, 1/3]; draw(); });
@@ -2887,6 +2973,28 @@ var LAT = (function(){
     var host = $("noise-legend"); host.textContent = "";
     names.forEach(function(n){ var s = el("span", null, "■ " + n); s.style.color = cols[n]; host.appendChild(s); });
   }
+  var chainSel = $("chain-strat"), chainT = $("chain-table"), chainNote = $("chain-note"), STATES = ["CC", "CD", "DC", "DD"];
+  names.forEach(function(n){ var o = el("option", null, n); o.value = n; if(n === "TFT") o.selected = true; chainSel.appendChild(o); });
+  function chainMatrix(p, eps){
+    var pt = noisy(p, eps), qt = noisy(p, eps), swap = [0, 2, 1, 3], M = [];
+    for(var s = 0; s < 4; s++){ var px = pt[s], py = qt[swap[s]]; M.push([px*py, px*(1-py), (1-px)*py, (1-px)*(1-py)]); }
+    return M;
+  }
+  function drawChain(){
+    var n = chainSel.value, p = NS.strategies[n].p, M = chainMatrix(p, epsNow), r = stationaryPayoff(p, p, epsNow, PM0);
+    var th = chainT.querySelector("thead"), tb = chainT.querySelector("tbody"); th.textContent = ""; tb.textContent = "";
+    var hr = el("tr"); hr.appendChild(el("th", null, "from ↓ to →")); STATES.forEach(function(s){ hr.appendChild(el("th", null, s)); }); th.appendChild(hr);
+    var sums = [0, 0, 0, 0];
+    M.forEach(function(row, i){ var tr = el("tr"); tr.appendChild(el("th", null, STATES[i]));
+      row.forEach(function(v, j){ sums[j] += v; tr.appendChild(el("td", null, fmt(v, 3))); }); tb.appendChild(tr); });
+    var ds = sums.every(function(v){ return Math.abs(v - 1) < 1e-9; });
+    var sr = el("tr", "sum " + (ds ? "ok" : "no")); sr.appendChild(el("th", null, "column sum")); sums.forEach(function(v){ sr.appendChild(el("td", null, fmt(v, 3))); }); tb.appendChild(sr);
+    var vtxt = r ? "v = (" + r.pi.map(function(v){ return fmt(v, 3); }).join(", ") + "), payoff " + fmt(r.x, 3) : "no unique stationary distribution at ε = 0";
+    chainNote.textContent = ds
+      ? "Every column sums to 1: the chain is doubly stochastic, so the uniform distribution is stationary and the payoff is (T+R+P+S)/4 = " + fmt((PM0.T+PM0.R+PM0.P+PM0.S)/4, 3) + " for every ε > 0. " + vtxt + "."
+      : "Column sums are not all 1, so the stationary distribution is not uniform and the payoff depends on ε. " + vtxt + ".";
+  }
+  chainSel.addEventListener("change", drawChain);
   function updateLive(){
     epsEl.textContent = fmt(epsNow, 3);
     var cols = palette();
@@ -2895,6 +3003,7 @@ var LAT = (function(){
       rows[n].v.textContent = r ? fmt(r.x, 3) : "not unique at ε = 0";
       rows[n].lab.style.color = cols[n];
     });
+    drawChain();
   }
   function tick(){
     var p = actP(sec);

@@ -1,7 +1,11 @@
 # NOTES.md — running state (update after each milestone)
 
-## Current state (2026-08-30, final)
-- All deliverables built, both reviews applied (REVIEW.md), PDF committed. Remaining ideas: 7-min slide deck; tighten test tolerances; Safari manual check.
+## Current state (2026-09-10)
+- App gained four theory/beyond benches for the professor send: derivation panel under δ, 4×4 chain with column sums under ε, sync/async lattice switch, mutation slider + basin on the simplex; framing note at top. Payload now carries spatial_sync_async. Published to GitHub (philipbergman6-glitch/pdlab) with Pages serving app/. Verified headless 1440×900 + 390×844 dark, 0 console errors.
+- Remaining: 7-min slide deck (prompt drafted for Claude Design); tighten test tolerances; Safari manual check.
+
+## State 2026-08-30
+- All deliverables built, both reviews applied (REVIEW.md), PDF committed.
 
 ## Earlier state
 - M1 core package DONE and committed. Full reproduce = ~60 s (Moran now 500k steps → ~4 min).
