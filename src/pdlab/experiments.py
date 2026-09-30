@@ -303,7 +303,7 @@ def exp_replicator(pm: PayoffMatrix, delta: float = 0.9, t_max: float = 60.0) ->
     for a in np.linspace(0.05, 0.9, 6):
         for c in np.linspace(0.02, 0.9, 6):
             if a + c < 0.98:
-                inits.append([a, 1 - a - c, c])
+                inits.append([float(a), float(1 - a - c), float(c)])
     trajs = []
     for x0 in inits:
         tr = replicator_trajectory(A, x0, t_max, n_points=300)
@@ -476,7 +476,7 @@ def exp_spatial(scale: Scale, seed: int = 8) -> Result:
             rng = np.random.default_rng(seed + s)
             g = SpatialPD.random(scale.lattice, float(b), 0.9, rng)
             ser, _ = g.run(scale.lattice_steps)
-            vals.append(ser[-tail:].mean())
+            vals.append(float(ser[-tail:].mean()))
         phase.append(
             {"b": float(b), "coop_mean": float(np.mean(vals)), "coop_sd": _sample_sd(vals)}
         )

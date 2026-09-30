@@ -8,16 +8,16 @@ Status legend: [ ] todo  [~] in progress  [x] done
 
 ## M1 Core package `pdlab`
 - [x] core modules all written (game, strategies, match, tournament, markov, analytic, evolution, spatial, finite, learning, experiments, figures, reproduce, cli)
-- [ ] strategies.py — ≥15 strategies via Strategy protocol + registry
-- [ ] match.py — play_match(s1,s2,rounds,noise,rng)
-- [ ] tournament.py — round robin, noise, seeds → DataFrame
-- [ ] markov.py — memory-1 stationary payoffs (exact, noise ε), ZD algebra
-- [ ] analytic.py — sympy δ* for Grim/TFT, one-shot deviation check, replicator fixed pts + Jacobian
-- [ ] evolution.py — replicator ODE (ALLC/ALLD/TFT), Moran process
-- [ ] spatial.py — Nowak–May lattice
-- [ ] learning.py — Q-learning agent
-- [ ] cli.py — `python -m pdlab reproduce`
-- [ ] export.py — results/canonical.json for app
+- [x] strategies.py — 18 strategies via Strategy protocol + registry
+- [x] match.py — play_match(s1,s2,rounds,noise,rng)
+- [x] tournament.py — round robin, noise, seeds → DataFrame
+- [x] markov.py — memory-1 stationary payoffs (exact, noise ε), ZD algebra
+- [x] analytic.py — sympy δ* for Grim/TFT, one-shot deviation check, replicator fixed pts + Jacobian
+- [x] evolution.py — replicator ODE (ALLC/ALLD/TFT), Moran process
+- [x] spatial.py — Nowak–May lattice
+- [x] learning.py — Q-learning agent
+- [x] cli.py — `python -m pdlab reproduce`
+- [x] reproduce.py — results/canonical.json + app payload (planned as export.py)
 
 ## M2 Tests
 - [x] pytest + hypothesis (346 tests, 99% cov), ruff, mypy clean, GH Actions

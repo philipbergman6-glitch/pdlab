@@ -13,17 +13,20 @@ jobs:
     strategy:
       matrix:
         python: ["3.11", "3.12"]
+    env:
+      # .python-version pins 3.11; without this `uv run` rebuilds the venv on 3.11 and drops the dev tools
+      UV_PYTHON: ${{ matrix.python }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
       - run: uv python install ${{ matrix.python }}
-      - run: uv sync --frozen --extra dev --python ${{ matrix.python }}
-      - run: uv run ruff check src tests scripts
-      - run: uv run ruff format --check src tests scripts
-      - run: uv run mypy
-      - run: uv run pytest --cov=pdlab --cov-report=xml --cov-fail-under=90
-      - run: uv run pdlab reproduce --root /tmp/pd --quick --no-hero
-      - run: uv run pdlab reproduce --root /tmp/pd2 --quick --no-hero && cmp /tmp/pd/results/canonical.json /tmp/pd2/results/canonical.json
+      - run: uv sync --frozen --extra dev
+      - run: uv run --no-sync ruff check src tests scripts
+      - run: uv run --no-sync ruff format --check src tests scripts
+      - run: uv run --no-sync mypy --python-version ${{ matrix.python }}
+      - run: uv run --no-sync pytest --cov=pdlab --cov-report=xml --cov-fail-under=90
+      - run: uv run --no-sync pdlab reproduce --root /tmp/pd --quick --no-hero
+      - run: uv run --no-sync pdlab reproduce --root /tmp/pd2 --quick --no-hero && cmp /tmp/pd/results/canonical.json /tmp/pd2/results/canonical.json
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python }}
