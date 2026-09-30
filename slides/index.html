@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Prisoner's Dilemma — 7-minute talk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* The app with the lights on: same faces and the same acid marker as app/, on
+   a paper ground so the white matplotlib figures sit flat on the slide. */
+:root {
+  --paper:  #f4f2ef;
+  --plate:  #ffffff;
+  --ink:    #08090b;
+  --soft:   #5b5d64;
+  --marker: #d8ff3e;
+  --coop:   #2458c5;
+  --defect: #c8321f;
+  --hair:   color-mix(in oklab, var(--ink) 14%, transparent);
+  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --text:    "Geist", system-ui, sans-serif;
+  --mono:    "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #1b1c1f; overflow: hidden; }
+body { font-family: var(--text); color: var(--ink); }
+
+/* Fixed 1600 x 900 stage, scaled to the window by the script below. */
+.stage { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
+  transform-origin: 0 0; background: var(--paper); overflow: hidden; }
+.slide { position: absolute; inset: 0 0 76px 0; padding: 64px 80px 28px; display: none;
+  flex-direction: column; gap: 32px; }
+.slide.is-current { display: flex; }
+
+.claim { font-family: var(--display); font-weight: 600; font-variation-settings: "wdth" 82;
+  font-size: 58px; line-height: 1.04; letter-spacing: -0.02em; margin: 0; max-width: 1360px;
+  text-wrap: balance; }
+.cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.cols.wide-fig { grid-template-columns: 5fr 7fr; }
+.say { font-size: 29px; line-height: 1.38; }
+.say p { margin: 0 0 22px; max-width: 34ch; }
+.say p:last-child { margin-bottom: 0; }
+.soft { color: var(--soft); }
+.num, .math { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.math { font-size: 0.94em; white-space: nowrap; word-spacing: -0.28em; }
+mark { background: var(--marker); color: var(--ink); padding: 0.02em 0.22em; border-radius: 4px; }
+.frac { display: inline-grid; vertical-align: middle; text-align: center; font-size: 0.86em; line-height: 1.15; }
+.frac > span:first-child { border-bottom: 2px solid currentColor; padding: 0 0.3em 0.06em; }
+.frac > span:last-child { padding: 0.06em 0.3em 0; }
+
+figure { margin: 0; min-height: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
+figure img { max-width: 100%; max-height: 100%; background: var(--plate); border: 1px solid var(--hair);
+  border-radius: 6px; padding: 10px; }
+
+/* Slide 1: the matrix is the hero. */
+.matrix { display: grid; grid-template-columns: 150px 1fr 1fr; grid-template-rows: 64px 1fr 1fr; gap: 10px;
+  width: 640px; height: 470px; justify-self: center; }
+.matrix .head { font-size: 22px; color: var(--soft); display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; }
+.matrix .cell { background: var(--plate); border: 1px solid var(--hair); border-radius: 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.matrix .pay { font-family: var(--mono); font-size: 62px; font-weight: 500; letter-spacing: -0.03em; }
+.matrix .tag { font-size: 20px; color: var(--soft); }
+.matrix .cell.cc { border: 3px solid var(--coop); }
+.matrix .cell.dd { background: var(--marker); border-color: var(--ink); }
+.matrix .cell.dd .tag { color: var(--ink); }
+.c { color: var(--coop); } .d { color: var(--defect); }
+.byline { font-size: 22px; color: var(--soft); margin: 0; }
+
+/* Slide 4: derived against measured. */
+table.check { border-collapse: collapse; width: 100%; font-size: 26px; }
+table.check th { text-align: left; font-weight: 500; color: var(--soft); font-size: 21px; padding: 0 20px 10px 0; border-bottom: 2px solid var(--ink); }
+table.check td { padding: 13px 20px 13px 0; border-bottom: 1px solid var(--hair); vertical-align: baseline; }
+table.check td:nth-child(n+2) { font-family: var(--mono); font-size: 24px; white-space: nowrap; word-spacing: -0.28em; }
+.stack { display: flex; flex-direction: column; gap: 24px; flex: 1; min-height: 0; }
+.stack figure { height: auto; flex: 1; }
+
+/* Slide 8 */
+.live { display: grid; grid-template-columns: 360px 1fr; gap: 64px; align-items: center; flex: 1; }
+.live img { width: 360px; height: 360px; border-radius: 6px; border: 1px solid var(--hair); image-rendering: pixelated; }
+.live ul { margin: 0; padding: 0; list-style: none; font-size: 30px; line-height: 1.35; }
+.live li { padding: 16px 0; border-bottom: 1px solid var(--hair); max-width: 38ch; }
+.live li:last-child { border-bottom: 0; }
+a { color: inherit; text-decoration-color: var(--coop); text-underline-offset: 0.18em; text-decoration-thickness: 3px; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--coop); outline-offset: 3px; }
+
+/* Speaker notes, toggled with N. */
+.notes { display: none; position: absolute; left: 80px; right: 80px; bottom: 12px; background: var(--ink); color: var(--paper);
+  font-size: 22px; line-height: 1.4; padding: 18px 24px; border-radius: 6px; }
+.show-notes .slide.is-current .notes { display: block; }
+
+/* The time rail: one segment per slide, width = its share of the seven minutes.
+   The marker is the real clock, so you can see whether you are ahead or behind. */
+.rail { position: absolute; left: 0; right: 0; bottom: 0; height: 76px; padding: 0 80px 22px; display: flex; align-items: flex-end; gap: 28px; }
+.track { position: relative; flex: 1; display: flex; gap: 4px; height: 34px; }
+.seg { position: relative; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; font: inherit; color: var(--soft);
+  border-top: 5px solid var(--hair); text-align: left; font-size: 17px; line-height: 27px; white-space: nowrap; overflow: hidden; }
+.seg.is-done { border-top-color: color-mix(in oklab, var(--ink) 45%, transparent); }
+.seg.is-current { border-top-color: var(--ink); color: var(--ink); font-weight: 500; }
+.clock-mark { position: absolute; top: -6px; width: 4px; height: 17px; margin-left: -2px; background: var(--coop); border-radius: 2px; display: none; }
+.clock-mark.is-late { background: var(--defect); }
+.clock { font-family: var(--mono); font-size: 19px; color: var(--soft); min-width: 132px; text-align: right; line-height: 27px; }
+.clock.is-late { color: var(--defect); }
+
+@media print {
+  @page { size: 1600px 900px; margin: 0; }
+  html, body { overflow: visible; height: auto; background: var(--paper); }
+  .stage { position: static; transform: none !important; height: auto; overflow: visible; }
+  .slide { display: flex; position: relative; inset: auto; height: 900px; break-after: page; padding-bottom: 104px; }
+  .rail, .notes { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+
+  <section class="slide" data-t="45" data-part="The dilemma">
+    <h1 class="claim">Defecting is better whatever the other player does, so both defect and both end up worse off.</h1>
+    <div class="cols">
+      <div class="matrix" role="img" aria-label="Payoff matrix: both cooperate 3,3; you cooperate they defect 0,5; you defect they cooperate 5,0; both defect 1,1">
+        <div></div><div class="head">they <span class="c">&nbsp;cooperate</span></div><div class="head">they <span class="d">&nbsp;defect</span></div>
+        <div class="head">you <span class="c">&nbsp;cooperate</span></div>
+        <div class="cell cc"><span class="pay">3, 3</span><span class="tag">better for both</span></div>
+        <div class="cell"><span class="pay">0, 5</span></div>
+        <div class="head">you <span class="d">&nbsp;defect</span></div>
+        <div class="cell"><span class="pay">5, 0</span></div>
+        <div class="cell dd"><span class="pay">1, 1</span><span class="tag">the only equilibrium</span></div>
+      </div>
+      <div class="say">
+        <p>Read down either column: <span class="math">5 &gt; 3</span> and <span class="math">1 &gt; 0</span>. Defect strictly dominates.</p>
+        <p>So (defect, defect) is the unique Nash equilibrium, and (cooperate, cooperate) beats it for both players.</p>
+        <p class="soft">The rest of the talk: what rescues cooperation, and what breaks it again.</p>
+        <p class="byline">Philip Bergman, game theory final project.<br>Payoffs throughout: <span class="math">(T, R, P, S) = (5, 3, 1, 0)</span></p>
+      </div>
+    </div>
+    <aside class="notes">Two players, one choice each. Whatever they do, I earn more by defecting: 5 beats 3, 1 beats 0. Same for them. We land on 1,1 although 3,3 was on the table. That gap is the dilemma.</aside>
+  </section>
+
+  <section class="slide" data-t="70" data-part="Repetition">
+    <h2 class="claim">Repeat the game forever and cooperation becomes an equilibrium, once players are patient enough.</h2>
+    <div class="cols">
+      <div class="say">
+        <p>A known last round unravels everything: defect in round <span class="math">N</span>, so in <span class="math">N−1</span>, … back to round 1.</p>
+        <p>With no last round, Grim Trigger holds iff
+          <span class="math">δ ≥ <span class="frac"><span>T − R</span><span>T − P</span></span> = <mark><span class="frac"><span>1</span><span>2</span></span></mark></span></p>
+        <p>Tit-for-Tat needs <span class="math">δ ≥ <span class="frac"><span>2</span><span>3</span></span></span>, and is subgame perfect only if <span class="math">T − R = P − S</span>. Here <span class="math">2 ≠ 1</span>: never.</p>
+      </div>
+      <figure><img src="../figures/thresholds.png" alt="Payoff from cooperating versus deviating as a function of the discount factor, with simulation points crossing at the derived thresholds"></figure>
+    </div>
+    <aside class="notes">Finite horizon: backward induction kills cooperation. Infinite horizon with discount δ: cooperating forever is worth R/(1−δ); cheating once gives T then P forever. Set them equal: δ* = 1/2. TFT is a Nash equilibrium from 2/3 but its punishment is not credible after a defection, so it is not subgame perfect for these payoffs.</aside>
+  </section>
+
+  <section class="slide" data-t="60" data-part="Selection">
+    <h2 class="claim">Under selection, Tit-for-Tat cannot invade defectors alone. It needs a critical mass.</h2>
+    <div class="cols">
+      <div class="say">
+        <p>Replicator dynamics on ALLC, ALLD and TFT at <span class="math">δ = 0.9</span>.</p>
+        <p>On the ALLD–TFT edge there is an unstable rest point at
+          <span class="math">x* = <mark><span class="frac"><span>1</span><span>17</span></span></mark> = 0.0588</span>. Below it TFT dies out, above it TFT takes over.</p>
+        <p>In a finite population chance can carry it across: one TFT mutant fixes with probability above <span class="math">1/N</span>.</p>
+      </div>
+      <figure><img src="../figures/replicator_simplex.png" alt="Replicator trajectories on the ALLC, ALLD, TFT simplex"></figure>
+    </div>
+    <aside class="notes">Strategies are now types in a population; a type grows if it earns more than average. ALLD is stable: Jacobian eigenvalues −1 and −0.1. TFT wins only if it starts above 1/17 of the population. The Moran process is the finite-population version: drift lets a single mutant fix more often than a neutral one would.</aside>
+  </section>
+
+  <section class="slide" data-t="60" data-part="Testing the theory">
+    <h2 class="claim">Every derived number was then measured by simulation.</h2>
+    <div class="stack">
+      <table class="check">
+        <thead><tr><th>claim</th><th>derived</th><th>measured</th></tr></thead>
+        <tbody>
+          <tr><td>Grim Trigger threshold</td><td>δ* = 1/2</td><td>payoffs cross at 0.50</td></tr>
+          <tr><td>TFT critical mass</td><td>x* = 1/17</td><td>trajectories split at 0.0588</td></tr>
+          <tr><td>TFT extinction rate below x*</td><td>−0.100</td><td>−0.098</td></tr>
+          <tr><td>Fixation of one TFT mutant</td><td>exact formula</td><td>within 2 s.e., N = 4 … 32</td></tr>
+          <tr><td>Nowak–May lattice, cooperator share</td><td>0.318 published</td><td><mark>0.314</mark></td></tr>
+          <tr><td>Strategy code against the axelrod library</td><td>—</td><td>91 / 91 pairings identical</td></tr>
+        </tbody>
+      </table>
+      <figure><img src="../figures/spatial_snapshots.png" alt="Snapshots of the Nowak–May lattice: cooperators and defectors coexisting in shifting clusters"></figure>
+    </div>
+    <aside class="notes">One command regenerates all of it. The lattice row is the interesting one: players with no memory at all, just copying their best neighbour, keep about 31% cooperation because cooperators survive in clusters.</aside>
+  </section>
+
+  <section class="slide" data-t="40" data-part="Tournament">
+    <h2 class="claim">In an 18-strategy tournament the top eight are all nice, and Tit-for-Tat is fifth, not first.</h2>
+    <div class="cols wide-fig">
+      <div class="say">
+        <p><span class="math">Gradual <mark>2.737</mark></span><br><span class="math soft">ZDGTFT-2 2.665</span><br><span class="math soft">GTFT 2.645</span><br><span class="math soft">Contrite TFT 2.615</span><br><span class="math">TFT 2.599</span></p>
+        <p class="soft">Mean payoff per round, 200 rounds, round robin. Nice means never the first to defect.</p>
+      </div>
+      <figure><img src="../figures/tournament_leaderboard.png" alt="Tournament leaderboard of 18 strategies by mean payoff per round"></figure>
+    </div>
+    <aside class="notes">Axelrod's headline survives: nice strategies win. But TFT itself is beaten by strategies that punish harder then make peace (Gradual) or forgive sometimes (GTFT).</aside>
+  </section>
+
+  <section class="slide" data-t="65" data-part="Noise">
+    <h2 class="claim">Any error rate at all, however small, drops Tit-for-Tat against itself from 3 to 2.25.</h2>
+    <div class="cols">
+      <div class="say">
+        <p>Each move flips with probability <span class="math">ε</span>. Two TFT players are a 4-state Markov chain whose transition matrix is doubly stochastic.</p>
+        <p>So every outcome is equally likely in the long run:
+          <span class="math"><span class="frac"><span>T + R + P + S</span><span>4</span></span> = <mark>2.25</mark></span> for every <span class="math">ε &gt; 0</span>.</p>
+        <p>Forgiving strategies lose only linearly: WSLS <span class="math">3 − 5ε</span>, GTFT <span class="math">3 − 3ε</span>.</p>
+      </div>
+      <figure><img src="../figures/noise_selfplay.png" alt="Self-play payoff against error rate: TFT flat at 2.25, WSLS and GTFT declining linearly from 3"></figure>
+    </div>
+    <aside class="notes">This is my own contribution. One slip starts an echo of retaliation that TFT cannot end. The proof is one line: all column sums of the transition matrix are 1, so the uniform distribution is stationary. The payoff is discontinuous at ε = 0. Exact chain and simulation agree.</aside>
+  </section>
+
+  <section class="slide" data-t="50" data-part="Extortion">
+    <h2 class="claim">An extortioner beats a learning opponent one on one, and still loses the tournament.</h2>
+    <div class="stack">
+      <div class="say" style="display:grid;grid-template-columns:1fr 1fr;gap:56px">
+        <p style="max-width:none">Extort-2 (Press &amp; Dyson 2012) forces <span class="math">s<sub>X</sub> − 1 = 2 (s<sub>Y</sub> − 1)</span> on any opponent. A Q&#8209;learner ends at <span class="math">1.97</span> while the extortioner takes <span class="math"><mark>2.98</mark></span>.</p>
+        <p style="max-width:none">But against the whole field it scores <span class="math">1.700</span>, last of 18, and it goes extinct in evolving populations. Extortion needs a victim; it cannot live off itself.</p>
+      </div>
+      <figure><img src="../figures/zd_learner.png" alt="Payoffs of a Q-learner and the Extort-2 strategy over training"></figure>
+    </div>
+    <aside class="notes">Zero-determinant strategies fix a linear relation between the two payoffs. The learner's best reply is to cooperate more, which pays the extortioner double the surplus. Two extortioners just get 1 each, so selection removes them.</aside>
+  </section>
+
+  <section class="slide" data-t="30" data-part="Live app">
+    <h2 class="claim">Cooperation survives through patience, clustering and forgiveness, and each one has a breaking point.</h2>
+    <div class="live">
+      <img src="../figures/hero_kaleidoscope.gif" alt="Nowak–May lattice evolving from a single defector">
+      <ul>
+        <li>Live: <a href="../app/" target="_blank" rel="noopener">open the app</a> and switch the lattice to asynchronous updating. Cooperation falls from <span class="num">0.314</span> to <span class="num"><mark>0.006</mark></span>.</li>
+        <li>Report, code and every number: <span class="math">github.com/philipbergman6-glitch/pdlab</span></li>
+        <li class="soft">One command reproduces all results; about 350 tests guard them.</li>
+      </ul>
+    </div>
+    <aside class="notes">Patience: δ above 1/2. Clustering: the lattice, but only with synchronous updates. Forgiveness: generous strategies survive noise, TFT does not. Then questions.</aside>
+  </section>
+
+  <nav class="rail" aria-label="Slides and time budget">
+    <div class="track" id="track"><span class="clock-mark" id="mark"></span></div>
+    <div class="clock" id="clock">0:00 / 7:00</div>
+  </nav>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var stage = document.getElementById("stage");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var track = document.getElementById("track");
+  var mark = document.getElementById("mark");
+  var clock = document.getElementById("clock");
+  var budgets = slides.map(function (s) {
+    var t = Number(s.getAttribute("data-t"));
+    if (!(t > 0)) { throw new Error("slide is missing a positive data-t budget"); }
+    return t;
+  });
+  var total = budgets.reduce(function (a, b) { return a + b; }, 0);
+  var current = 0, startedAt = null;
+
+  var segs = slides.map(function (s, i) {
+    var b = document.createElement("button");
+    b.className = "seg";
+    b.style.flex = budgets[i] + " 0 0";
+    b.textContent = s.getAttribute("data-part");
+    b.title = budgets[i] + " s";
+    b.addEventListener("click", function () { go(i); });
+    track.appendChild(b);
+    return b;
+  });
+
+  function fmt(sec) { var m = Math.floor(sec / 60), s = Math.floor(sec % 60); return m + ":" + (s < 10 ? "0" : "") + s; }
+
+  function fit() {
+    var k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = "scale(" + k + ") translate(-50%, -50%)";
+  }
+
+  function go(i, fromLoad) {
+    if (i < 0 || i >= slides.length) { return; }
+    if (startedAt === null && i > current && !fromLoad) { startedAt = Date.now(); }
+    current = i;
+    slides.forEach(function (s, j) { s.classList.toggle("is-current", j === i); });
+    segs.forEach(function (b, j) {
+      b.classList.toggle("is-current", j === i);
+      b.classList.toggle("is-done", j < i);
+      if (j === i) { b.setAttribute("aria-current", "step"); } else { b.removeAttribute("aria-current"); }
+    });
+    history.replaceState(null, "", "#" + (i + 1));
+    tick();
+  }
+
+  function tick() {
+    if (startedAt === null) { clock.textContent = "0:00 / " + fmt(total); mark.style.display = "none"; return; }
+    var el = (Date.now() - startedAt) / 1000;
+    var due = 0;
+    for (var j = 0; j <= current; j++) { due += budgets[j]; }
+    var late = el > due;
+    clock.textContent = fmt(el) + " / " + fmt(total);
+    clock.classList.toggle("is-late", late);
+    mark.style.display = "block";
+    mark.style.left = Math.min(100, (el / total) * 100) + "%";
+    mark.classList.toggle("is-late", late);
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+    var k = e.key;
+    if (k === "ArrowRight" || k === "PageDown" || k === " ") { e.preventDefault(); go(current + 1); }
+    else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(current - 1); }
+    else if (k === "Home") { go(0); }
+    else if (k === "End") { go(slides.length - 1); }
+    else if (k === "n" || k === "N") { document.body.classList.toggle("show-notes"); }
+    else if (k === "t" || k === "T") { startedAt = null; tick(); }
+    else if (k === "f" || k === "F") {
+      if (document.fullscreenElement) { document.exitFullscreen(); } else { document.documentElement.requestFullscreen(); }
+    }
+  });
+
+  window.addEventListener("resize", fit);
+  fit();
+  var h = parseInt(location.hash.slice(1), 10);
+  go(h >= 1 && h <= slides.length ? h - 1 : 0, true);
+  setInterval(tick, 500);
+})();
+</script>
+</body>
+</html>

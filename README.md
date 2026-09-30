@@ -7,6 +7,7 @@
 <p align="center">
   <a href="report/build/prisoners_dilemma_report.pdf"><b>Report (PDF)</b></a> ·
   <a href="https://philipbergman6-glitch.github.io/pdlab/app/"><b>Interactive app</b></a> ·
+  <a href="https://philipbergman6-glitch.github.io/pdlab/slides/"><b>Talk slides</b></a> ·
   <a href="results/canonical.json">canonical results</a> ·
   <a href="REVIEW.md">independent reviews</a>
 </p>

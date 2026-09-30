@@ -1,5 +1,10 @@
 # NOTES.md — running state (update after each milestone)
 
+## Current state (2026-09-30)
+- CI fixed and green on 3.11 and 3.12 (uv pinned to the matrix Python; mypy per version; two float casts for numpy 2.5 stubs).
+- Talk deck: `slides/index.html` (8 slides, 7:00 budget on the bottom rail; keys: arrows, N notes, T reset clock, F fullscreen) + `slides/prisoners_dilemma_slides.pdf` as offline backup (rebuild by printing the page at 1600 × 900). Numbers guarded by `tests/test_slides_numbers.py`.
+- Remaining: rehearse against the clock; AI-assistance disclosure line; lessons 4–8; Safari/phone check.
+
 ## Current state (2026-09-10)
 - App gained four theory/beyond benches for the professor send: derivation panel under δ, 4×4 chain with column sums under ε, sync/async lattice switch, mutation slider + basin on the simplex; framing note at top. Payload now carries spatial_sync_async. Published to GitHub (philipbergman6-glitch/pdlab) with Pages serving app/. Verified headless 1440×900 + 390×844 dark, 0 console errors.
 - Remaining: 7-min slide deck (prompt drafted for Claude Design); tighten test tolerances; Safari manual check.
